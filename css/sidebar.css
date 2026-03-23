@@ -1,0 +1,66 @@
+/* css/sidebar.css - サイドバー内部のデザイン（紺色・透過対応版） */
+
+/* ヘッダー部分 */
+.sidebar-header {
+    padding: 30px 20px;
+    border-bottom: 1px solid rgba(0, 31, 63, 0.1);
+}
+
+.sidebar-header h2 {
+    font-size: 1.5rem;
+    color: #001f3f;
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+
+/* カテゴリリスト（メニュー）の領域 */
+.category-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px 0;
+    /* 🔴 これが重要：リストが潰れないように高さを確保します */
+    min-height: 100px;
+}
+
+/* 各メニュー項目 */
+.category-item {
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #001f3f;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    margin: 4px 10px;
+}
+
+.category-item:hover {
+    background-color: rgba(0, 31, 63, 0.08);
+    color: #003366;
+}
+
+.category-item.active {
+    background-color: rgba(0, 31, 63, 0.15);
+    color: #001f3f;
+    font-weight: 700;
+    border-left: 4px solid #001f3f; /* Aurovia風左ライン */
+}
+
+/* 🔴 ボタンのクラス名をHTMLと合わせます（.add-btn） */
+.add-btn {
+    margin: 20px;
+    padding: 12px;
+    background-color: transparent;
+    color: #001f3f;
+    border: 1px solid #001f3f;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.add-btn:hover {
+    background-color: #001f3f;
+    color: white;
+}

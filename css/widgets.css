@@ -1,0 +1,87 @@
+/* css/widgets.css - サイドバー機能と時計ウィジェットの統合 */
+
+/* --- 1. サイドバー内のカテゴリ一覧（復活の要） --- */
+.category-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px 0;
+}
+
+/* カテゴリアイテムの基本形状 */
+.category-item {
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    margin: 4px 10px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #001f3f; /* 紺色 */
+    display: flex;
+    align-items: center;
+}
+
+.category-item:hover {
+    background: rgba(0, 31, 63, 0.05);
+    color: #003366;
+}
+
+.category-item.active {
+    background: rgba(0, 31, 63, 0.1);
+    font-weight: 700;
+    border-left: 4px solid #001f3f;
+}
+
+/* 下部の新規カテゴリボタン */
+.add-btn {
+    background: transparent;
+    border: 1px solid #001f3f;
+    color: #001f3f;
+    margin: 20px;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.add-btn:hover {
+    background: #001f3f;
+    color: #ffffff;
+}
+
+/* --- 2. 中央の時計ウィジェットエリア --- */
+.widgets-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    min-height: 200px;
+}
+
+/* 挨拶テキストの設定 */
+#greetingText {
+    font-size: 1.5rem;
+    font-weight: 300;
+    letter-spacing: 4px;
+    margin-top: 15px;
+    opacity: 0.8;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.3s;
+}
+
+#greetingText:hover {
+    opacity: 1;
+}
+
+/* 時計のフォントバランス */
+.widgets-area h1 {
+    font-size: 6rem;
+    font-weight: 200;
+    margin: 0;
+    line-height: 1;
+    letter-spacing: -2px;
+}

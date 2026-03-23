@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NestTab - Dashboard</title>
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/widgets.css">
+</head>
+<body>
+
+    <div class="app-wrapper">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>NestTab</h2>
+            </div>
+            <nav class="category-list" id="categoryList"></nav>
+            <button id="addCategoryBtn" class="add-btn">+ New Category</button>
+        </aside>
+
+        <main class="main-content">
+            <section class="widgets-area" id="widgetsArea"></section>
+
+            <section class="accordion-area" id="accordionArea">
+                <div class="accordion-container" id="accordionContainer"></div>
+            </section>
+        </main>
+    </div>
+
+    <div id="customContextMenu" class="custom-menu" style="display:none;">
+        <div class="menu-item" id="menuAddLink">リンクを追加</div>
+        <div class="menu-item" id="menuEditCategory">カテゴリ名を変更</div>
+        <div class="menu-separator"></div>
+        <div class="menu-item" id="menuDeleteCategory" style="color: #ff4d4d;">削除</div>
+    </div>
+
+    <script src="js/storage-manager.js"></script>
+    <script src="js/accordion-manager.js"></script>
+    <script src="js/sidebar-manager.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
