@@ -2,8 +2,9 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NestTab v2</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div id="bg-container"></div>
@@ -11,8 +12,10 @@
     <div class="main-interface">
         <div class="info-unit">
             <div id="clock">00:00</div>
-            <div id="date">2026年4月2日(木)</div>
-            <div id="weather">--°C / 読み込み中...</div>
+            <div id="date">----年--月--日(--)</div>
+            <div class="weather-box">
+                <div id="weather-display">Sunny / 22°C</div>
+            </div>
         </div>
 
         <div class="search-unit">
@@ -21,15 +24,34 @@
                     <span class="search-icon">🔍</span>
                     <input type="text" name="q" placeholder="Google で検索または URL を入力" autocomplete="off">
                     <div class="search-tools">
-                        <span>🎙️</span> <span>📷</span> </div>
+                        <span>🎙️</span>
+                        <span>📷</span>
+                    </div>
                 </div>
             </form>
         </div>
 
+        <div class="widgets-container">
+            <div class="category-box" data-category="work">
+                <h3 class="category-title">Work</h3>
+                <div class="link-list" id="list-work"></div>
+            </div>
+
+            <div class="category-box" data-category="hobby">
+                <h3 class="category-title">Hobby</h3>
+                <div class="link-list" id="list-hobby"></div>
+            </div>
+
+            <div class="category-box" data-category="others">
+                <h3 class="category-title">Others</h3>
+                <div class="link-list" id="list-others"></div>
+            </div>
+        </div>
+
         <input type="file" id="bg-input" style="display:none" accept="image/*">
-        <button id="bg-change-btn">背景を変更</button>
+        <button id="bg-change-btn" title="背景画像を変更">🖼️</button>
     </div>
 
-    <script src="script.js"></script>
+    <script src="js/script.js"></script>
 </body>
 </html>
