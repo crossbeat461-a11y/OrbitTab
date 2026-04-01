@@ -1,65 +1,77 @@
+/* 基本リセット */
 body, html {
     margin: 0;
     padding: 0;
     height: 100%;
-    overflow: hidden;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    overflow-x: hidden;
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    background-color: #0a192f;
 }
 
+/* 背景画像レイヤー */
 #bg-container {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: #2d3436; /* 初期背景色 */
     background-size: cover;
     background-position: center;
     z-index: -1;
-    transition: 0.5s;
+    transition: opacity 0.8s ease-in-out;
 }
 
+/* メイン画面レイアウト */
 .main-interface {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    height: 100vh;
+    padding-top: 8vh;
+    min-height: 100vh;
     color: white;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    text-shadow: 0 2px 15px rgba(0,0,0,0.5);
 }
 
-/* 情報ユニット（時計・天気） */
+/* 時計・日付ユニット */
 .info-unit {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 30px;
 }
 
 #clock {
-    font-size: 80px;
-    font-weight: 200; /* 極細フォント */
-    margin-bottom: 10px;
+    font-size: 110px;
+    font-weight: 100; /* 極細 */
+    letter-spacing: -2px;
+    margin-bottom: 5px;
 }
 
-#date, #weather {
-    font-size: 20px;
+#date {
+    font-size: 22px;
+    font-weight: 200;
+    opacity: 0.8;
+}
+
+#weather-display {
+    font-size: 18px;
     font-weight: 300;
-    opacity: 0.9;
+    margin-top: 10px;
+    color: #8cced7;
 }
 
-/* 検索窓ユニット */
+/* 検索窓 */
 .search-unit {
     width: 100%;
-    max-width: 600px;
+    max-width: 580px;
+    margin-bottom: 50px;
 }
 
 .search-bar {
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 30px;
-    padding: 12px 20px;
+    padding: 14px 25px;
     display: flex;
     align-items: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 
 .search-bar input {
@@ -69,24 +81,86 @@ body, html {
     font-size: 16px;
     padding: 0 15px;
     outline: none;
-    color: #333;
+    color: #202124;
 }
 
-.search-tools {
+.search-icon { color: #9aa0a6; }
+.search-tools { display: flex; gap: 15px; cursor: pointer; filter: grayscale(1); }
+
+/* ウィジェット（リンクボックス） */
+.widgets-container {
     display: flex;
-    gap: 15px;
-    color: #666;
-    cursor: pointer;
+    gap: 25px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 90%;
 }
 
+.category-box {
+    background: rgba(10, 25, 47, 0.5);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    width: 280px;
+    min-height: 220px;
+    padding: 25px;
+    transition: all 0.3s ease;
+}
+
+.category-box:hover {
+    transform: translateY(-8px);
+    background: rgba(10, 25, 47, 0.7);
+    border-color: rgba(140, 206, 215, 0.4);
+}
+
+.category-title {
+    font-size: 13px;
+    font-weight: 200;
+    color: #8cced7;
+    margin: 0 0 20px 0;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    border-bottom: 1px solid rgba(140, 206, 215, 0.2);
+    padding-bottom: 8px;
+}
+
+/* リンクアイテム */
+.link-item {
+    display: block;
+    color: rgba(255,255,255,0.9);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 300;
+    margin-bottom: 10px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: 0.2s;
+}
+
+.link-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding-left: 15px;
+}
+
+/* 設定ボタン */
 #bg-change-btn {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: rgba(0, 0, 0, 0.5);
+    bottom: 30px;
+    right: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
     color: white;
-    border: none;
-    padding: 10px;
-    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
     cursor: pointer;
+    font-size: 20px;
+    transition: 0.3s;
 }
+
+#bg-change-btn:hover { background: rgba(255, 255, 255, 0.2); }
