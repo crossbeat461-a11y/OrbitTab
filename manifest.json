@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "NestTab v2 - Control Center",
-  "version": "2.2.0",
-  "description": "カレンダー・背景・リンク管理を備えた自分専用の管制塔",
+  "name": "OrbitTab - パーソナライズ管制塔",
+  "version": "1.0.0",
+  "description": "お気に入りの背景に、カレンダー・付箋・リンクを自由に配置。ブラウザの『新しいタブ』を、あなただけの効率的な拠点に変えます。",
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
@@ -10,6 +10,11 @@
     "storage"
   ],
   "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
     "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "OrbitTab"
   }
 }
