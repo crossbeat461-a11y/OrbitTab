@@ -1,40 +1,53 @@
-// --- 1. 時計 & 日付 ---
+// --- 1. 時計 & 日付更新 ---
 function updateClock() {
     const now = new Date();
     const h = String(now.getHours()).padStart(2, '0');
     const m = String(now.getMinutes()).padStart(2, '0');
-    document.getElementById('clock').innerText = `${h}:${m}`;
-    const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' };
-    document.getElementById('date').innerText = now.toLocaleDateString('ja-JP', options);
+    const clockElement = document.getElementById('clock');
+    const dateElement = document.getElementById('date');
+
+    if (clockElement) clockElement.innerText = `${h}:${m}`;
+    if (dateElement) {
+        const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' };
+        dateElement.innerText = now.toLocaleDateString('ja-JP', options);
+    }
 }
 setInterval(updateClock, 1000);
 updateClock();
 
-// --- 2. 背景画像管理 (IndexedDB) ---
+// --- 2. 背景画像管理 (IndexedDB v2) ---
 const dbName = "NestTabDB", storeName = "settings", dbVersion = 2;
+
 function openDB() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         const request = indexedDB.open(dbName, dbVersion);
         request.onupgradeneeded = (e) => {
-            if (!e.target.result.objectStoreNames.contains(storeName)) e.target.result.createObjectStore(storeName);
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(storeName)) db.createObjectStore(storeName);
         };
         request.onsuccess = (e) => resolve(e.target.result);
+        request.onerror = (e) => reject(e.target.error);
     });
 }
+
 async function saveBackground(base64) {
     const db = await openDB();
-    db.transaction(storeName, "readwrite").objectStore(storeName).put(base64, "background");
+    const tx = db.transaction(storeName, "readwrite");
+    tx.objectStore(storeName).put(base64, "background");
 }
+
 async function loadBackground() {
-    const db = await openDB();
-    const request = db.transaction(storeName, "readonly").objectStore(storeName).get("background");
-    request.onsuccess = () => {
-        if (request.result) {
-            const bg = document.getElementById('bg-container');
-            bg.style.backgroundImage = `url(${request.result})`;
-            bg.style.opacity = 1;
-        }
-    };
+    try {
+        const db = await openDB();
+        const request = db.transaction(storeName, "readonly").objectStore(storeName).get("background");
+        request.onsuccess = () => {
+            if (request.result) {
+                const bg = document.getElementById('bg-container');
+                bg.style.backgroundImage = `url(${request.result})`;
+                bg.style.opacity = 1;
+            }
+        };
+    } catch (err) { console.error("背景ロード失敗", err); }
 }
 
 // --- 3. リンク & カテゴリ管理 ---
@@ -42,6 +55,7 @@ let links = JSON.parse(localStorage.getItem('nestTab_v3_links')) || { "Work": []
 
 function renderBoard() {
     const container = document.getElementById('widgets-container');
+    if (!container) return;
     container.innerHTML = '';
 
     Object.keys(links).forEach(catName => {
@@ -55,23 +69,24 @@ function renderBoard() {
             <div class="link-list" id="list-${catName}"></div>
         `;
 
+        // カテゴリ削除
         box.querySelector('.cat-delete-btn').onclick = () => {
-            if(confirm(`カテゴリ「${catName}」を削除しますか？`)) {
+            if(confirm(`カテゴリ「${catName}」と中のリンクをすべて削除しますか？`)) {
                 delete links[catName];
                 saveAndRender();
             }
         };
 
-        // ドラッグ＆ドロップ
+        // ドラッグ＆ドロップ登録
         box.ondragover = (e) => { e.preventDefault(); box.style.borderColor = "rgba(255,255,255,0.5)"; };
         box.ondragleave = () => { box.style.borderColor = "rgba(255,255,255,0.1)"; };
         box.ondrop = (e) => {
             e.preventDefault();
             box.style.borderColor = "rgba(255,255,255,0.1)";
             const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+            
             if (url && url.startsWith('http')) {
                 let title = url;
-                // HTMLデータからタイトルを抽出
                 const html = e.dataTransfer.getData('text/html');
                 if (html) {
                     const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -82,62 +97,67 @@ function renderBoard() {
             }
         };
 
+        // リンク一覧の描画
         const listDiv = box.querySelector('.link-list');
         links[catName].forEach((item, index) => {
             const wrapper = document.createElement('div');
             wrapper.className = 'link-wrapper';
 
-            // 名称表示・編集エリア
-            const titleSpan = document.createElement('span');
-            titleSpan.className = 'link-title link-item';
-            titleSpan.textContent = item.title;
-            titleSpan.title = "クリックして名前を変更 / 右クリックでURLを開く";
+            // 左側のアイコン (🔗)
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'link-symbol';
+            iconSpan.innerHTML = '🔗';
+            iconSpan.onclick = () => window.open(item.url, '_blank');
 
-            // 左クリックで名称変更
-            titleSpan.onclick = (e) => {
+            // 名称表示エリア
+            const titleSpan = document.createElement('span');
+            titleSpan.className = 'link-title';
+            titleSpan.textContent = item.title;
+            titleSpan.title = "左クリック: 開く / 右クリック: 名前変更";
+
+            // 左クリックで開く
+            titleSpan.onclick = () => window.open(item.url, '_blank');
+
+            // 右クリックで名前変更
+            titleSpan.oncontextmenu = (e) => {
                 e.preventDefault();
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.className = 'edit-input';
                 input.value = item.title;
-                
-                input.onblur = () => { // フォーカスが外れたら保存
-                    if (input.value.trim()) {
+
+                const finishEdit = () => {
+                    if (input.value.trim() && input.value.trim() !== item.title) {
                         links[catName][index].title = input.value.trim();
                         saveAndRender();
+                    } else {
+                        renderBoard();
                     }
                 };
-                input.onkeydown = (e) => {
-                    if (e.key === 'Enter') input.blur();
+
+                input.onblur = finishEdit;
+                input.onkeydown = (ev) => {
+                    if (ev.key === 'Enter') finishEdit();
+                    if (ev.key === 'Escape') renderBoard();
                 };
 
                 wrapper.replaceChild(input, titleSpan);
                 input.focus();
+                input.select();
             };
 
-            // 中クリック or Ctrl+クリックでページを開く
-            titleSpan.onauxclick = () => window.open(item.url, '_blank');
-            // 通常の遷移（ダブルクリックや特定の操作で開くようにしてもOKですが、今はシンプルに右側のアイコン等なしで実装）
-            // 補助として「開く」アイコンを付けることも可能ですが、まずはリネームを優先
-
+            // 削除ボタン (×)
             const delBtn = document.createElement('span');
             delBtn.className = 'delete-btn';
             delBtn.innerHTML = '&times;';
-            delBtn.onclick = () => {
+            delBtn.onclick = (e) => {
+                e.stopPropagation();
                 links[catName].splice(index, 1);
                 saveAndRender();
             };
 
-            // URLを開くためのボタン（名称がクリックで編集になったため、別途配置）
-            const linkBtn = document.createElement('span');
-            linkBtn.innerHTML = '🔗';
-            linkBtn.style.cursor = 'pointer';
-            linkBtn.style.fontSize = '12px';
-            linkBtn.style.opacity = '0.5';
-            linkBtn.onclick = () => window.open(item.url, '_blank');
-
+            wrapper.appendChild(iconSpan);
             wrapper.appendChild(titleSpan);
-            wrapper.appendChild(linkBtn);
             wrapper.appendChild(delBtn);
             listDiv.appendChild(wrapper);
         });
@@ -151,24 +171,41 @@ function saveAndRender() {
     renderBoard();
 }
 
-document.getElementById('add-cat-btn').onclick = () => {
-    const newName = prompt("新しいカテゴリ名を入力してください");
-    if (newName && !links[newName]) { links[newName] = []; saveAndRender(); }
-};
+// カテゴリ追加ボタン
+const addBtn = document.getElementById('add-cat-btn');
+if (addBtn) {
+    addBtn.onclick = () => {
+        const newName = prompt("新しいカテゴリ名を入力してください");
+        if (newName && !links[newName]) {
+            links[newName] = [];
+            saveAndRender();
+        } else if (links[newName]) {
+            alert("その名前は既に存在します");
+        }
+    };
+}
 
+// 背景変更
 const bgInput = document.getElementById('bg-input');
-document.getElementById('bg-change-btn').onclick = () => bgInput.click();
-bgInput.onchange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = async (ev) => {
-            document.getElementById('bg-container').style.backgroundImage = `url(${ev.target.result})`;
-            document.getElementById('bg-container').style.opacity = 1;
-            await saveBackground(ev.target.result);
-        };
-        reader.readAsDataURL(file);
-    }
-};
+const bgBtn = document.getElementById('bg-change-btn');
+if (bgBtn && bgInput) {
+    bgBtn.onclick = () => bgInput.click();
+    bgInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                const imgBase64 = ev.target.result;
+                document.getElementById('bg-container').style.backgroundImage = `url(${imgBase64})`;
+                document.getElementById('bg-container').style.opacity = 1;
+                await saveBackground(imgBase64);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+}
 
-window.addEventListener('DOMContentLoaded', () => { loadBackground(); renderBoard(); });
+window.addEventListener('DOMContentLoaded', () => {
+    loadBackground();
+    renderBoard();
+});
