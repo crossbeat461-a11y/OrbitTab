@@ -220,3 +220,70 @@ body, html {
     color: #ff5f5f; /* マウスを乗せると赤く光る */
     transform: scale(1.2);
 }
+/* --- 既存のスタイルに以下を追加・修正 --- */
+
+.widgets-container {
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 95%;
+    padding-bottom: 100px; /* 下に余白を作る */
+}
+
+/* カテゴリタイトルのエリア（削除ボタンを右に置くため） */
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 8px;
+}
+
+.category-title {
+    font-size: 13px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.8);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin: 0;
+}
+
+/* カテゴリ削除ボタン（ゴミ箱マークなど） */
+.cat-delete-btn {
+    opacity: 0;
+    cursor: pointer;
+    font-size: 12px;
+    color: rgba(255,255,255,0.3);
+    transition: 0.2s;
+}
+
+.category-box:hover .cat-delete-btn {
+    opacity: 1;
+}
+
+.cat-delete-btn:hover {
+    color: #ff5f5f;
+}
+
+/* 右下のコントロールボタン群 */
+.control-btn {
+    position: fixed;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    transition: 0.3s;
+    z-index: 100;
+}
+
+#bg-change-btn { bottom: 30px; right: 30px; }
+#add-cat-btn { bottom: 30px; right: 85px; } /* 背景ボタンの左に配置 */
+
+.control-btn:hover { background: rgba(255, 255, 255, 0.3); transform: scale(1.1); }
