@@ -109,7 +109,7 @@ body, html {
 
 .category-box {
     background: rgba(10, 25, 47, 0.05);
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(4px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     width: 280px;
