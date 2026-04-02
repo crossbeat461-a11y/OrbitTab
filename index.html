@@ -13,43 +13,24 @@
         <div class="info-unit">
             <div id="clock">00:00</div>
             <div id="date">----年--月--日(--)</div>
-            <div class="weather-box">
-                <div id="weather-display">Sunny / 22°C</div>
-            </div>
+            <div id="weather-display">Sunny / 22°C</div>
         </div>
 
         <div class="search-unit">
             <form action="https://www.google.com/search" method="get">
                 <div class="search-bar">
                     <span class="search-icon">🔍</span>
-                    <input type="text" name="q" placeholder="Google で検索または URL を入力" autocomplete="off">
-                    <div class="search-tools">
-                        <span>🎙️</span>
-                        <span>📷</span>
-                    </div>
+                    <input type="text" name="q" placeholder="Google で検索" autocomplete="off">
                 </div>
             </form>
         </div>
 
-        <div class="widgets-container">
-            <div class="category-box" data-category="work">
-                <h3 class="category-title">Work</h3>
-                <div class="link-list" id="list-work"></div>
-            </div>
+        <div id="widgets-container" class="widgets-container"></div>
 
-            <div class="category-box" data-category="hobby">
-                <h3 class="category-title">Hobby</h3>
-                <div class="link-list" id="list-hobby"></div>
-            </div>
-
-            <div class="category-box" data-category="others">
-                <h3 class="category-title">Others</h3>
-                <div class="link-list" id="list-others"></div>
-            </div>
-        </div>
-
+        <button id="add-cat-btn" class="control-btn" title="カテゴリを追加">＋</button>
+        
         <input type="file" id="bg-input" style="display:none" accept="image/*">
-        <button id="bg-change-btn" title="背景画像を変更">🖼️</button>
+        <button id="bg-change-btn" class="control-btn" title="背景画像を変更">🖼️</button>
     </div>
 
     <script src="js/script.js"></script>
