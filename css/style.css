@@ -1,15 +1,14 @@
-/* --- 修正版：css/style.css --- */
-
+/* 基本リセット */
 body, html {
     margin: 0;
     padding: 0;
     height: 100%;
-    overflow-x: hidden;
+    overflow: hidden;
     font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
-    /* background-color: #0a192f;  ←これをコメントアウト（削除）するか透明にする */
-    background-color: transparent; 
+    background-color: transparent;
 }
 
+/* 背景レイヤー */
 #bg-container {
     position: fixed;
     top: 0;
@@ -19,31 +18,25 @@ body, html {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    z-index: -1; /* bodyが透明なら、これで見えるようになります */
-    background-color: #0a192f; /* 画像がない時の予備としてここに入れるのはOK */
+    background-color: #0a192f; /* 画像がない時の予備色 */
+    z-index: -1;
+    opacity: 0;
     transition: opacity 0.8s ease-in-out;
-    opacity: 0; /* JSで読み込まれるまで隠しておく設定 */
 }
 
-/* 念のため、メインインターフェースの重なりを上げる */
+/* メインレイアウト */
 .main-interface {
     position: relative;
-    z-index: 1; 
-    /* ...残りの設定... */
-}
-
-/* メイン画面レイアウト */
-.main-interface {
+    z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding-top: 8vh;
     min-height: 100vh;
     color: white;
-    text-shadow: 0 2px 15px rgba(0,0,0,0.5);
 }
 
-/* 時計・日付ユニット */
+/* 時計・日付 */
 .info-unit {
     text-align: center;
     margin-bottom: 30px;
@@ -51,15 +44,16 @@ body, html {
 
 #clock {
     font-size: 110px;
-    font-weight: 100; /* 極細 */
+    font-weight: 100;
     letter-spacing: -2px;
-    margin-bottom: 5px;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
 #date {
     font-size: 22px;
     font-weight: 200;
-    opacity: 0.8;
+    opacity: 0.9;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
 }
 
 #weather-display {
@@ -67,9 +61,10 @@ body, html {
     font-weight: 300;
     margin-top: 10px;
     color: #8cced7;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
 }
 
-/* 検索窓 */
+/* 検索窓：少しだけ透けさせて背景と馴染ませる */
 .search-unit {
     width: 100%;
     max-width: 580px;
@@ -77,7 +72,8 @@ body, html {
 }
 
 .search-bar {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(5px);
     border-radius: 30px;
     padding: 14px 25px;
     display: flex;
@@ -95,64 +91,50 @@ body, html {
     color: #202124;
 }
 
-.search-icon { color: #9aa0a6; }
-.search-tools { display: flex; gap: 15px; cursor: pointer; filter: grayscale(1); }
-
-/* ウィジェット（リンクボックス） */
+/* カテゴリボックス：ユニバーサル・スタンダード */
 .widgets-container {
     display: flex;
     gap: 25px;
     flex-wrap: wrap;
     justify-content: center;
-    width: 90%;
+    width: 95%;
 }
 
 .category-box {
-    /* 1. 背景を完全透明に (RGBAの最後を0に) */
-    background: rgba(255, 255, 255, 0); 
-    
-    /* 2. ボカシを極限まで下げる (4pxから2pxへ) */
-    /* これを下げるほど「ガラス」ではなく「空気」に近づきます */
-    backdrop-filter: blur(2px); 
-    
-    /* 3. 境界線を消す、あるいは「上だけ」にする */
-    /* 箱全体を囲むのではなく、上の細い線だけにすると一気にヌケ感が出ます */
-    border: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.1); 
-    
-    /* 4. 影を完全に排除 */
-    box-shadow: none;
-
-    /* レイアウト維持 */
-    border-radius: 0px; /* 角丸をなくすと、よりシャープな印象に */
-    width: 280px;
-    min-height: 220px;
+    background: rgba(0, 0, 0, 0.2); /* 黒20%透過 */
+    backdrop-filter: blur(12px);    /* ボカシ12px */
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    width: 300px;
+    min-height: 250px;
     padding: 20px;
-    transition: all 0.4s ease;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }
 
-/* タイトル部分の線も極限まで薄く */
-.category-title {
-    font-size: 12px;
-    font-weight: 200;
-    color: rgba(255, 255, 255, 0.7); /* 白すぎない白 */
-    letter-spacing: 4px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    margin-bottom: 15px;
-    padding-bottom: 5px;
-}
-
-/* マウスを乗せた時だけ、うっすらと「箱」を浮かび上がらせる */
 .category-box:hover {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(140, 206, 215, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-5px);
+}
+
+.category-title {
+    font-size: 13px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.7);
+    margin: 0 0 15px 0;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 8px;
 }
 
 /* リンクアイテム */
 .link-item {
     display: block;
-    color: rgba(255,255,255,0.9);
+    color: #ffffff;
     text-decoration: none;
     font-size: 14px;
     font-weight: 300;
@@ -162,21 +144,21 @@ body, html {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); /* 視認性確保 */
     transition: 0.2s;
 }
 
 .link-item:hover {
     background: rgba(255, 255, 255, 0.15);
-    color: #fff;
     padding-left: 15px;
 }
 
-/* 設定ボタン */
+/* 背景変更ボタン */
 #bg-change-btn {
     position: fixed;
     bottom: 30px;
     right: 30px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(5px);
     color: white;
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -188,4 +170,4 @@ body, html {
     transition: 0.3s;
 }
 
-#bg-change-btn:hover { background: rgba(255, 255, 255, 0.2); }
+#bg-change-btn:hover { background: rgba(255, 255, 255, 0.3); }

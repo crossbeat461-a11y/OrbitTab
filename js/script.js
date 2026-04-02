@@ -15,101 +15,67 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-// --- 2. 背景画像管理 (IndexedDB: バージョンを2に上げて確実に初期化) ---
+// --- 2. 背景画像管理 (IndexedDB v2) ---
 const dbName = "NestTabDB";
 const storeName = "settings";
-const dbVersion = 2; // バージョンを上げて再構築を促す
+const dbVersion = 2;
 
 function openDB() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(dbName, dbVersion);
-        
         request.onupgradeneeded = (e) => {
             const db = e.target.result;
-            // 箱がなければ作る
             if (!db.objectStoreNames.contains(storeName)) {
                 db.createObjectStore(storeName);
-                console.log("📦 データベースの箱を作成しました");
             }
         };
-
         request.onsuccess = (e) => resolve(e.target.result);
-        request.onerror = (e) => {
-            console.error("❌ DBオープン失敗:", e.target.error);
-            reject(e.target.error);
-        };
+        request.onerror = (e) => reject(e.target.error);
     });
 }
 
 async function saveBackground(base64) {
-    try {
-        const db = await openDB();
-        const tx = db.transaction(storeName, "readwrite");
-        const store = tx.objectStore(storeName);
-        store.put(base64, "background");
-        
-        tx.oncomplete = () => console.log("✅ 背景画像をIndexedDBに保存しました");
-        tx.onerror = (e) => console.error("❌ 保存トランザクションエラー:", e.target.error);
-    } catch (err) {
-        console.error("❌ 保存処理失敗:", err);
-    }
+    const db = await openDB();
+    const tx = db.transaction(storeName, "readwrite");
+    tx.objectStore(storeName).put(base64, "background");
 }
 
 async function loadBackground() {
     try {
         const db = await openDB();
         const tx = db.transaction(storeName, "readonly");
-        const store = tx.objectStore(storeName);
-        const request = store.get("background");
-
+        const request = tx.objectStore(storeName).get("background");
         request.onsuccess = () => {
             if (request.result) {
                 const bg = document.getElementById('bg-container');
-                if (bg) {
-                    bg.style.backgroundImage = `url(${request.result})`;
-                    bg.style.opacity = 1;
-                    console.log("🖼️ 背景画像を復元しました");
-                }
-            } else {
-                console.log("ℹ️ 保存されている背景はありません");
+                bg.style.backgroundImage = `url(${request.result})`;
+                bg.style.opacity = 1;
             }
         };
-    } catch (err) {
-        console.error("❌ 読み込み処理失敗:", err);
-    }
+    } catch (err) { console.error("背景ロード失敗", err); }
 }
 
 const bgInput = document.getElementById('bg-input');
 const bgBtn = document.getElementById('bg-change-btn');
 
 if (bgBtn && bgInput) {
-    bgBtn.addEventListener('click', () => {
-        console.log("🔘 フォルダ選択を開きます");
-        bgInput.click();
-    });
-
+    bgBtn.addEventListener('click', () => bgInput.click());
     bgInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
-
-        console.log("📂 ファイル選択検知:", file.name, "(", file.size, "bytes )");
-
         const reader = new FileReader();
         reader.onload = async (event) => {
             const imgBase64 = event.target.result;
             const bg = document.getElementById('bg-container');
-            if (bg) {
-                bg.style.backgroundImage = `url(${imgBase64})`;
-                bg.style.opacity = 1;
-            }
+            bg.style.backgroundImage = `url(${imgBase64})`;
+            bg.style.opacity = 1;
             await saveBackground(imgBase64);
         };
-        reader.onerror = () => console.error("❌ ファイル読み込み失敗");
         reader.readAsDataURL(file);
     });
 }
 
-// --- 3. リンク管理 ---
+// --- 3. リンク管理 & ドラッグ＆ドロップ ---
 let links = JSON.parse(localStorage.getItem('nestTab_v2_links')) || {
     work: [], hobby: [], others: []
 };
@@ -133,7 +99,7 @@ function renderLinks() {
 document.querySelectorAll('.category-box').forEach(box => {
     box.addEventListener('dragover', (e) => {
         e.preventDefault();
-        box.style.borderColor = '#8cced7';
+        box.style.borderColor = 'rgba(255, 255, 255, 0.5)';
     });
     box.addEventListener('dragleave', () => {
         box.style.borderColor = 'rgba(255, 255, 255, 0.1)';
@@ -159,9 +125,7 @@ document.querySelectorAll('.category-box').forEach(box => {
     });
 });
 
-// 初期化
 window.addEventListener('DOMContentLoaded', () => {
-    console.log("🚀 NestTab 起動完了");
     loadBackground();
     renderLinks();
 });
