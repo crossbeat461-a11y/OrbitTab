@@ -8,7 +8,6 @@
 </head>
 <body>
     <div id="bg-container"></div>
-    
     <div class="main-interface">
         <div class="info-unit">
             <div id="clock">00:00</div>
@@ -25,19 +24,22 @@
             </form>
         </div>
 
-        <div id="calendar-wrapper" class="calendar-unit"></div>
+        <div id="info-row" class="info-row">
+            <div id="calendar-wrapper" class="info-column"></div>
+            <div id="notes-wrapper" class="info-column"></div>
+        </div>
 
         <div id="widgets-container" class="widgets-container"></div>
 
         <div class="bottom-controls">
+            <button id="note-setup-btn" class="control-btn" title="付箋を追加">📝</button>
             <button id="cal-setup-btn" class="control-btn" title="カレンダーを設定">📅</button>
-            <button id="add-cat-btn" class="control-btn" title="カテゴリを追加">＋</button>
-            <button id="bg-change-btn" class="control-btn" title="背景画像を変更">🖼️</button>
+            <button id="add-cat-btn" class="control-btn" title="カテゴリ追加">＋</button>
+            <button id="bg-change-btn" class="control-btn" title="背景変更">🖼️</button>
         </div>
         
         <input type="file" id="bg-input" style="display:none" accept="image/*">
     </div>
-
     <script src="js/script.js"></script>
 </body>
 </html>
