@@ -287,3 +287,31 @@ body, html {
 #add-cat-btn { bottom: 30px; right: 85px; } /* 背景ボタンの左に配置 */
 
 .control-btn:hover { background: rgba(255, 255, 255, 0.3); transform: scale(1.1); }
+/* --- 既存のスタイルに追加 --- */
+
+/* 編集中の入力欄のデザイン */
+.edit-input {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(140, 206, 215, 0.5);
+    color: white;
+    font-size: 14px;
+    font-family: inherit;
+    padding: 2px 5px;
+    width: 100%;
+    border-radius: 4px;
+    outline: none;
+}
+
+/* 名称部分（クリックできることを示す） */
+.link-title {
+    cursor: pointer;
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.link-title:hover {
+    text-decoration: underline;
+    color: #8cced7; /* シアン色に少し光らせる */
+}
