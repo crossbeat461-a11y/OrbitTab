@@ -1,14 +1,16 @@
-/* 基本リセット */
+/* --- NestTab v2: Universal Standard Style --- */
+
+/* 1. 基本リセット */
 body, html {
     margin: 0;
     padding: 0;
     height: 100%;
-    overflow: hidden;
-    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    overflow-x: hidden;
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
     background-color: transparent;
 }
 
-/* 背景レイヤー */
+/* 2. 背景レイヤー（IndexedDBから読み込まれる画像） */
 #bg-container {
     position: fixed;
     top: 0;
@@ -18,13 +20,13 @@ body, html {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    background-color: #0a192f; /* 画像がない時の予備色 */
+    background-color: #0a192f; /* 予備のネイビー */
     z-index: -1;
     opacity: 0;
     transition: opacity 0.8s ease-in-out;
 }
 
-/* メインレイアウト */
+/* 3. メインレイアウト */
 .main-interface {
     position: relative;
     z-index: 1;
@@ -36,7 +38,7 @@ body, html {
     color: white;
 }
 
-/* 時計・日付 */
+/* 4. 時計・日付ユニット（極細フォント） */
 .info-unit {
     text-align: center;
     margin-bottom: 30px;
@@ -64,7 +66,7 @@ body, html {
     text-shadow: 0 2px 10px rgba(0,0,0,0.5);
 }
 
-/* 検索窓：少しだけ透けさせて背景と馴染ませる */
+/* 5. Google 検索窓 */
 .search-unit {
     width: 100%;
     max-width: 580px;
@@ -73,7 +75,7 @@ body, html {
 
 .search-bar {
     background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(8px);
     border-radius: 30px;
     padding: 14px 25px;
     display: flex;
@@ -91,18 +93,21 @@ body, html {
     color: #202124;
 }
 
-/* カテゴリボックス：ユニバーサル・スタンダード */
+.search-icon { color: #9aa0a6; }
+
+/* 6. カテゴリボックス（グラスモーフィズム） */
 .widgets-container {
     display: flex;
     gap: 25px;
     flex-wrap: wrap;
     justify-content: center;
     width: 95%;
+    padding-bottom: 120px;
 }
 
 .category-box {
-    background: rgba(0, 0, 0, 0.2); /* 黒20%透過 */
-    backdrop-filter: blur(12px);    /* ボカシ12px */
+    background: rgba(0, 0, 0, 0.2); /* 黒20%：草原でも宇宙でも文字が見える魔法の比率 */
+    backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
@@ -120,118 +125,6 @@ body, html {
     transform: translateY(-5px);
 }
 
-.category-title {
-    font-size: 13px;
-    font-weight: 300;
-    color: rgba(255,255,255,0.7);
-    margin: 0 0 15px 0;
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding-bottom: 8px;
-}
-
-/* リンクアイテム */
-.link-item {
-    display: block;
-    color: #ffffff;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 300;
-    margin-bottom: 10px;
-    padding: 6px 10px;
-    border-radius: 8px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); /* 視認性確保 */
-    transition: 0.2s;
-}
-
-.link-item:hover {
-    background: rgba(255, 255, 255, 0.15);
-    padding-left: 15px;
-}
-
-/* 背景変更ボタン */
-#bg-change-btn {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(5px);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 20px;
-    transition: 0.3s;
-}
-
-#bg-change-btn:hover { background: rgba(255, 255, 255, 0.3); }
-/* リンクアイテムを包むコンテナ */
-.link-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    margin-bottom: 5px;
-    border-radius: 8px;
-    transition: background 0.2s;
-}
-
-.link-wrapper:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-/* 既存の .link-item を少し修正（幅を調整） */
-.link-item {
-    flex-grow: 1; /* 削除ボタン以外のスペースを埋める */
-    display: block;
-    color: #ffffff;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 300;
-    padding: 8px 10px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-}
-
-/* 削除ボタンのスタイル */
-.delete-btn {
-    opacity: 0; /* 普段は隠しておく */
-    cursor: pointer;
-    color: rgba(255, 255, 255, 0.4);
-    padding: 0 12px;
-    font-size: 18px;
-    transition: all 0.2s;
-    user-select: none;
-}
-
-/* ホバーした時だけ表示 */
-.link-wrapper:hover .delete-btn {
-    opacity: 1;
-}
-
-.delete-btn:hover {
-    color: #ff5f5f; /* マウスを乗せると赤く光る */
-    transform: scale(1.2);
-}
-/* --- 既存のスタイルに以下を追加・修正 --- */
-
-.widgets-container {
-    display: flex;
-    gap: 25px;
-    flex-wrap: wrap;
-    justify-content: center;
-    width: 95%;
-    padding-bottom: 100px; /* 下に余白を作る */
-}
-
-/* カテゴリタイトルのエリア（削除ボタンを右に置くため） */
 .category-header {
     display: flex;
     justify-content: space-between;
@@ -244,30 +137,86 @@ body, html {
 .category-title {
     font-size: 13px;
     font-weight: 300;
-    color: rgba(255,255,255,0.8);
+    color: rgba(255,255,255,0.7);
     text-transform: uppercase;
     letter-spacing: 3px;
     margin: 0;
 }
 
-/* カテゴリ削除ボタン（ゴミ箱マークなど） */
 .cat-delete-btn {
     opacity: 0;
     cursor: pointer;
-    font-size: 12px;
-    color: rgba(255,255,255,0.3);
+    font-size: 14px;
     transition: 0.2s;
 }
+.category-box:hover .cat-delete-btn { opacity: 0.5; }
+.cat-delete-btn:hover { opacity: 1 !important; color: #ff5f5f; }
 
-.category-box:hover .cat-delete-btn {
-    opacity: 1;
+/* 7. リンクアイテム（アイコン・名称・削除ボタン） */
+.link-wrapper {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2px;
+    border-radius: 6px;
+    transition: background 0.2s;
 }
 
-.cat-delete-btn:hover {
-    color: #ff5f5f;
+.link-wrapper:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
-/* 右下のコントロールボタン群 */
+.link-symbol {
+    padding-left: 10px;
+    font-size: 12px;
+    opacity: 0.4;
+    cursor: pointer;
+    transition: 0.2s;
+    user-select: none;
+}
+.link-wrapper:hover .link-symbol { opacity: 0.8; }
+
+.link-title {
+    flex-grow: 1;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 300;
+    padding: 8px 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    cursor: pointer;
+}
+
+.link-title:hover {
+    color: #8cced7;
+}
+
+/* 編集中の入力欄 */
+.edit-input {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #8cced7;
+    color: white;
+    font-size: 14px;
+    padding: 4px 8px;
+    width: 80%;
+    margin: 4px 10px;
+    border-radius: 4px;
+    outline: none;
+}
+
+.delete-btn {
+    opacity: 0;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.4);
+    padding: 0 12px;
+    font-size: 18px;
+    transition: 0.2s;
+}
+.link-wrapper:hover .delete-btn { opacity: 1; }
+.delete-btn:hover { color: #ff5f5f; transform: scale(1.2); }
+
+/* 8. コントロールボタン群 */
 .control-btn {
     position: fixed;
     background: rgba(255, 255, 255, 0.15);
@@ -284,34 +233,9 @@ body, html {
 }
 
 #bg-change-btn { bottom: 30px; right: 30px; }
-#add-cat-btn { bottom: 30px; right: 85px; } /* 背景ボタンの左に配置 */
+#add-cat-btn { bottom: 30px; right: 85px; }
 
-.control-btn:hover { background: rgba(255, 255, 255, 0.3); transform: scale(1.1); }
-/* --- 既存のスタイルに追加 --- */
-
-/* 編集中の入力欄のデザイン */
-.edit-input {
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(140, 206, 215, 0.5);
-    color: white;
-    font-size: 14px;
-    font-family: inherit;
-    padding: 2px 5px;
-    width: 100%;
-    border-radius: 4px;
-    outline: none;
-}
-
-/* 名称部分（クリックできることを示す） */
-.link-title {
-    cursor: pointer;
-    flex-grow: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.link-title:hover {
-    text-decoration: underline;
-    color: #8cced7; /* シアン色に少し光らせる */
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
 }
