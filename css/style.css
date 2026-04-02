@@ -239,3 +239,33 @@ body, html {
     background: rgba(255, 255, 255, 0.3);
     transform: scale(1.1);
 }
+/* カレンダーユニットの配置 */
+.calendar-unit {
+    width: 95%;
+    max-width: 900px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
+}
+
+.calendar-box {
+    width: 100% !important;
+    height: 450px;
+}
+
+/* 🌟 Googleカレンダーをダークモード化する魔法 */
+.calendar-box iframe {
+    width: 100%;
+    height: 380px;
+    border: none;
+    border-radius: 8px;
+    /* 白いカレンダーの色を反転させて背景に馴染ませる */
+    filter: invert(0.9) hue-rotate(180deg) brightness(0.8);
+    opacity: 0.8;
+}
+
+/* カレンダー設定ボタン（右下に追加） */
+#cal-setup-btn {
+    bottom: 30px;
+    right: 140px; /* 他のボタンと重ならないように配置 */
+}

@@ -209,3 +209,47 @@ window.addEventListener('DOMContentLoaded', () => {
     loadBackground();
     renderBoard();
 });
+// --- 4. カレンダー管理 ---
+let calUrl = localStorage.getItem('nestTab_calUrl') || "";
+
+function renderCalendar() {
+    const wrapper = document.getElementById('calendar-wrapper');
+    const content = document.getElementById('calendar-content');
+    
+    if (calUrl) {
+        wrapper.style.display = 'flex';
+        content.innerHTML = `<iframe src="${calUrl}"></iframe>`;
+    } else {
+        wrapper.style.display = 'none';
+    }
+}
+
+// カレンダー設定ボタンをHTMLに追加（DOMContentLoaded内などで実行）
+function initCalendarControls() {
+    const btn = document.createElement('button');
+    btn.id = 'cal-setup-btn';
+    btn.className = 'control-btn';
+    btn.innerHTML = '📅';
+    btn.title = "カレンダーを設定";
+    btn.onclick = () => {
+        const url = prompt("Googleカレンダーの「埋め込み用URL」を入力してください\n（設定 ＞ カレンダーの設定 ＞ このカレンダーの統合 ＞ 埋め込みコード内の src部分）");
+        if (url) {
+            // iframeコードごと貼られた場合の対策
+            const match = url.match(/src="([^"]+)"/);
+            const finalUrl = match ? match[1] : url;
+            
+            calUrl = finalUrl;
+            localStorage.setItem('nestTab_calUrl', calUrl);
+            renderCalendar();
+        }
+    };
+    document.querySelector('.main-interface').appendChild(btn);
+}
+
+// 既存の DOMContentLoaded 内に追記
+window.addEventListener('DOMContentLoaded', () => {
+    loadBackground();
+    renderBoard();
+    initCalendarControls(); // これを追記
+    renderCalendar();       // これを追記
+});
