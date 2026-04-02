@@ -3,6 +3,8 @@
 // ==========================================
 const DB_NAME = "OrbitTabDB";
 const STORE_NAME = "settings";
+
+// 確定した木村さんのnoteマガジンURL
 const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153"; 
 
 // 初めて使うユーザーへの初期データ
@@ -180,7 +182,6 @@ function renderBoard() {
 let calUrl = localStorage.getItem('orbitTab_calUrl') || "";
 let noteContent = localStorage.getItem('orbitTab_note');
 
-// 初回起動時にウェルカムメッセージを表示
 if (noteContent === null) {
     noteContent = WELCOME_MSG;
 }
@@ -191,7 +192,6 @@ function renderInfoRow() {
     const noteWrap = document.getElementById('notes-wrapper');
     if (!infoRow || !calWrap || !noteWrap) return;
 
-    // カレンダー表示
     if (calUrl) {
         calWrap.style.display = 'block';
         calWrap.innerHTML = `
@@ -211,7 +211,6 @@ function renderInfoRow() {
         };
     } else { calWrap.style.display = 'none'; }
 
-    // 付箋表示
     if (noteContent !== null) {
         noteWrap.style.display = 'block';
         noteWrap.innerHTML = `
@@ -240,10 +239,10 @@ function renderInfoRow() {
 }
 
 // ==========================================
-// 6. UIイベント・バリデーション
+// 6. UIイベント（右下の小さなボタン群）
 // ==========================================
 
-// noteガイドボタン
+// noteガイドボタン：ここをクリックすると確定URLへ
 const guideBtn = document.getElementById('guide-btn');
 if (guideBtn) {
     guideBtn.onclick = () => window.open(NOTE_URL, '_blank');
@@ -306,7 +305,7 @@ bgInput.onchange = e => {
     }
 };
 
-// 起動処理
+// 起動
 window.addEventListener('DOMContentLoaded', () => {
     loadBackground();
     renderBoard();
