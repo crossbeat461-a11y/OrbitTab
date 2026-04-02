@@ -1,14 +1,15 @@
-/* 基本リセット */
+/* --- 修正版：css/style.css --- */
+
 body, html {
     margin: 0;
     padding: 0;
     height: 100%;
     overflow-x: hidden;
     font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
-    background-color: #0a192f;
+    /* background-color: #0a192f;  ←これをコメントアウト（削除）するか透明にする */
+    background-color: transparent; 
 }
 
-/* 背景画像レイヤー */
 #bg-container {
     position: fixed;
     top: 0;
@@ -17,8 +18,18 @@ body, html {
     height: 100%;
     background-size: cover;
     background-position: center;
-    z-index: -1;
+    background-repeat: no-repeat;
+    z-index: -1; /* bodyが透明なら、これで見えるようになります */
+    background-color: #0a192f; /* 画像がない時の予備としてここに入れるのはOK */
     transition: opacity 0.8s ease-in-out;
+    opacity: 0; /* JSで読み込まれるまで隠しておく設定 */
+}
+
+/* 念のため、メインインターフェースの重なりを上げる */
+.main-interface {
+    position: relative;
+    z-index: 1; 
+    /* ...残りの設定... */
 }
 
 /* メイン画面レイアウト */
