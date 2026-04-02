@@ -55,15 +55,14 @@ function renderBoard() {
             <div class="link-list" id="list-${catName}"></div>
         `;
 
-        // カテゴリ削除
         box.querySelector('.cat-delete-btn').onclick = () => {
-            if(confirm(`カテゴリ「${catName}」と中のリンクをすべて削除しますか？`)) {
+            if(confirm(`カテゴリ「${catName}」を削除しますか？`)) {
                 delete links[catName];
                 saveAndRender();
             }
         };
 
-        // ドラッグ＆ドロップ設定
+        // ドラッグ＆ドロップ
         box.ondragover = (e) => { e.preventDefault(); box.style.borderColor = "rgba(255,255,255,0.5)"; };
         box.ondragleave = () => { box.style.borderColor = "rgba(255,255,255,0.1)"; };
         box.ondrop = (e) => {
@@ -72,29 +71,74 @@ function renderBoard() {
             const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
             if (url && url.startsWith('http')) {
                 let title = url;
+                // HTMLデータからタイトルを抽出
                 const html = e.dataTransfer.getData('text/html');
                 if (html) {
                     const doc = new DOMParser().parseFromString(html, 'text/html');
-                    title = doc.querySelector('a')?.textContent || url;
+                    title = doc.querySelector('a')?.textContent || doc.title || url;
                 }
                 links[catName].push({ title: title.trim(), url: url.trim() });
                 saveAndRender();
             }
         };
 
-        // リンク一覧の描画
         const listDiv = box.querySelector('.link-list');
         links[catName].forEach((item, index) => {
             const wrapper = document.createElement('div');
             wrapper.className = 'link-wrapper';
-            wrapper.innerHTML = `
-                <a class="link-item" href="${item.url}" target="_blank">${item.title}</a>
-                <span class="delete-btn">&times;</span>
-            `;
-            wrapper.querySelector('.delete-btn').onclick = () => {
+
+            // 名称表示・編集エリア
+            const titleSpan = document.createElement('span');
+            titleSpan.className = 'link-title link-item';
+            titleSpan.textContent = item.title;
+            titleSpan.title = "クリックして名前を変更 / 右クリックでURLを開く";
+
+            // 左クリックで名称変更
+            titleSpan.onclick = (e) => {
+                e.preventDefault();
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'edit-input';
+                input.value = item.title;
+                
+                input.onblur = () => { // フォーカスが外れたら保存
+                    if (input.value.trim()) {
+                        links[catName][index].title = input.value.trim();
+                        saveAndRender();
+                    }
+                };
+                input.onkeydown = (e) => {
+                    if (e.key === 'Enter') input.blur();
+                };
+
+                wrapper.replaceChild(input, titleSpan);
+                input.focus();
+            };
+
+            // 中クリック or Ctrl+クリックでページを開く
+            titleSpan.onauxclick = () => window.open(item.url, '_blank');
+            // 通常の遷移（ダブルクリックや特定の操作で開くようにしてもOKですが、今はシンプルに右側のアイコン等なしで実装）
+            // 補助として「開く」アイコンを付けることも可能ですが、まずはリネームを優先
+
+            const delBtn = document.createElement('span');
+            delBtn.className = 'delete-btn';
+            delBtn.innerHTML = '&times;';
+            delBtn.onclick = () => {
                 links[catName].splice(index, 1);
                 saveAndRender();
             };
+
+            // URLを開くためのボタン（名称がクリックで編集になったため、別途配置）
+            const linkBtn = document.createElement('span');
+            linkBtn.innerHTML = '🔗';
+            linkBtn.style.cursor = 'pointer';
+            linkBtn.style.fontSize = '12px';
+            linkBtn.style.opacity = '0.5';
+            linkBtn.onclick = () => window.open(item.url, '_blank');
+
+            wrapper.appendChild(titleSpan);
+            wrapper.appendChild(linkBtn);
+            wrapper.appendChild(delBtn);
             listDiv.appendChild(wrapper);
         });
 
@@ -107,18 +151,11 @@ function saveAndRender() {
     renderBoard();
 }
 
-// カテゴリ追加ボタン
 document.getElementById('add-cat-btn').onclick = () => {
     const newName = prompt("新しいカテゴリ名を入力してください");
-    if (newName && !links[newName]) {
-        links[newName] = [];
-        saveAndRender();
-    } else if (links[newName]) {
-        alert("その名前は既に存在します");
-    }
+    if (newName && !links[newName]) { links[newName] = []; saveAndRender(); }
 };
 
-// 背景変更
 const bgInput = document.getElementById('bg-input');
 document.getElementById('bg-change-btn').onclick = () => bgInput.click();
 bgInput.onchange = (e) => {
@@ -134,7 +171,4 @@ bgInput.onchange = (e) => {
     }
 };
 
-window.addEventListener('DOMContentLoaded', () => {
-    loadBackground();
-    renderBoard();
-});
+window.addEventListener('DOMContentLoaded', () => { loadBackground(); renderBoard(); });
