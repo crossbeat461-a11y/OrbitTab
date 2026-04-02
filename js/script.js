@@ -1,38 +1,47 @@
 // ==========================================
+// 0. 安全なデータ取得ユーティリティ
+// ==========================================
+function getSafeStorage(key, defaultValue) {
+    try {
+        const item = localStorage.getItem(key);
+        if (!item) return defaultValue;
+        return JSON.parse(item);
+    } catch (e) {
+        console.error(`Storage error for ${key}:`, e);
+        return defaultValue;
+    }
+}
+
+// ==========================================
 // 1. 時計 & 日付更新機能
 // ==========================================
 function updateClock() {
-    const now = new Date();
-    const h = String(now.getHours()).padStart(2, '0');
-    const m = String(now.getMinutes()).padStart(2, '0');
     const clockElement = document.getElementById('clock');
     const dateElement = document.getElementById('date');
+    if (!clockElement || !dateElement) return;
 
-    if (clockElement) clockElement.innerText = `${h}:${m}`;
-    if (dateElement) {
-        const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' };
-        dateElement.innerText = now.toLocaleDateString('ja-JP', options);
-    }
+    const now = new Date();
+    clockElement.innerText = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    
+    const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' };
+    dateElement.innerText = now.toLocaleDateString('ja-JP', options);
 }
 setInterval(updateClock, 1000);
 updateClock();
 
 // ==========================================
-// 2. 背景画像管理 (IndexedDB v2)
+// 2. 背景画像管理 (IndexedDB)
 // ==========================================
-const dbName = "NestTabDB";
-const storeName = "settings";
+const dbName = "NestTabDB", storeName = "settings";
 
 function openDB() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         const request = indexedDB.open(dbName, 2);
-        request.onupgradeneeded = (e) => {
-            const db = e.target.result;
-            if (!db.objectStoreNames.contains(storeName)) {
-                db.createObjectStore(storeName);
-            }
+        request.onupgradeneeded = e => {
+            if (!e.target.result.objectStoreNames.contains(storeName)) e.target.result.createObjectStore(storeName);
         };
-        request.onsuccess = (e) => resolve(e.target.result);
+        request.onsuccess = e => resolve(e.target.result);
+        request.onerror = e => reject(e.target.error);
     });
 }
 
@@ -41,22 +50,33 @@ async function loadBackground() {
         const db = await openDB();
         const request = db.transaction(storeName, "readonly").objectStore(storeName).get("background");
         request.onsuccess = () => {
-            if (request.result) {
-                const bg = document.getElementById('bg-container');
+            const bg = document.getElementById('bg-container');
+            if (request.result && bg) {
                 bg.style.backgroundImage = `url(${request.result})`;
                 bg.style.opacity = 1;
+            } else if (bg) {
+                bg.style.opacity = 1; // 背景がない場合はデフォルト色を表示
             }
         };
-    } catch (err) { console.error("背景ロード失敗", err); }
+    } catch (err) {
+        console.warn("Background load failed, using default color.", err);
+        const bg = document.getElementById('bg-container');
+        if (bg) bg.style.opacity = 1;
+    }
 }
 
 // ==========================================
-// 3. リンク & カテゴリ管理
+// 3. リンク & カテゴリ管理 (堅牢化版)
 // ==========================================
-let links = JSON.parse(localStorage.getItem('nestTab_v3_links')) || { "Work": [], "Hobby": [] };
+// 初期値の設定をより安全に
+let links = getSafeStorage('nestTab_v3_links', { "Work": [], "Hobby": [] });
 
 function saveAndRender() {
-    localStorage.setItem('nestTab_v3_links', JSON.stringify(links));
+    try {
+        localStorage.setItem('nestTab_v3_links', JSON.stringify(links));
+    } catch (e) {
+        alert("保存容量がいっぱいです。不要なリンクを削除してください。");
+    }
     renderBoard();
 }
 
@@ -76,7 +96,6 @@ function renderBoard() {
             <div class="link-list"></div>
         `;
 
-        // カテゴリ削除
         box.querySelector('.cat-delete-btn').onclick = () => {
             if (confirm(`カテゴリ「${cat}」を削除しますか？`)) {
                 delete links[cat];
@@ -84,21 +103,23 @@ function renderBoard() {
             }
         };
 
-        // ドラッグ＆ドロップ登録
-        box.ondragover = (e) => e.preventDefault();
-        box.ondrop = (e) => {
+        // ドラッグ＆ドロップ
+        box.ondragover = e => e.preventDefault();
+        box.ondrop = e => {
             e.preventDefault();
-            const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
-            if (url && url.startsWith('http')) {
-                const html = e.dataTransfer.getData('text/html');
-                let title = url;
-                if (html) {
-                    const doc = new DOMParser().parseFromString(html, 'text/html');
-                    title = doc.querySelector('a')?.textContent || doc.title || url;
+            try {
+                const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+                if (url && url.startsWith('http')) {
+                    const html = e.dataTransfer.getData('text/html');
+                    let title = url;
+                    if (html) {
+                        const doc = new DOMParser().parseFromString(html, 'text/html');
+                        title = doc.querySelector('a')?.textContent || doc.title || url;
+                    }
+                    links[cat].push({ title: title.trim().substring(0, 100), url: url.trim() });
+                    saveAndRender();
                 }
-                links[cat].push({ title: title.trim(), url: url.trim() });
-                saveAndRender();
-            }
+            } catch (err) { console.error("Drop failed", err); }
         };
 
         const listDiv = box.querySelector('.link-list');
@@ -107,17 +128,17 @@ function renderBoard() {
             wrap.className = 'link-wrapper';
             wrap.innerHTML = `
                 <span class="link-symbol">🔗</span>
-                <span class="link-title" title="左: 開く / 右: 名前変更">${item.title}</span>
-                <span class="delete-btn" title="削除">&times;</span>
+                <span class="link-title" title="右クリックで名前変更">${item.title}</span>
+                <span class="delete-btn">&times;</span>
             `;
 
-            const titleSpan = wrap.querySelector('.link-title');
-            titleSpan.onclick = () => window.open(item.url, '_blank');
-            titleSpan.oncontextmenu = (e) => {
+            const ts = wrap.querySelector('.link-title');
+            ts.onclick = () => window.open(item.url, '_blank');
+            ts.oncontextmenu = e => {
                 e.preventDefault();
-                const newT = prompt("名称を変更:", item.title);
+                const newT = prompt("名前を変更:", item.title);
                 if (newT && newT.trim()) {
-                    links[cat][index].title = newT.trim();
+                    links[cat][index].title = newT.trim().substring(0, 100);
                     saveAndRender();
                 }
             };
@@ -133,10 +154,10 @@ function renderBoard() {
 }
 
 // ==========================================
-// 4. カレンダー & 付箋 (Sticky Note) 管理
+// 4. カレンダー & 付箋管理 (堅牢化版)
 // ==========================================
 let calUrl = localStorage.getItem('nestTab_calUrl') || "";
-let noteContent = localStorage.getItem('nestTab_note') || null; // nullならボックス自体非表示
+let noteContent = localStorage.getItem('nestTab_note') || null;
 
 function renderInfoRow() {
     const infoRow = document.getElementById('info-row');
@@ -144,7 +165,7 @@ function renderInfoRow() {
     const noteWrap = document.getElementById('notes-wrapper');
     if (!infoRow || !calWrap || !noteWrap) return;
 
-    // カレンダーの描画
+    // カレンダー
     if (calUrl) {
         calWrap.style.display = 'block';
         calWrap.innerHTML = `
@@ -153,21 +174,14 @@ function renderInfoRow() {
                     <h3 class="category-title">Schedule</h3>
                     <span class="cat-delete-btn" id="del-cal-btn">🗑️</span>
                 </div>
-                <iframe src="${calUrl}"></iframe>
+                <iframe src="${calUrl}" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
             </div>`;
         document.getElementById('del-cal-btn').onclick = () => {
-            if (confirm("カレンダー連携を解除しますか？")) {
-                calUrl = "";
-                localStorage.removeItem('nestTab_calUrl');
-                renderInfoRow();
-            }
+            if (confirm("解除しますか？")) { calUrl = ""; localStorage.removeItem('nestTab_calUrl'); renderInfoRow(); }
         };
-    } else {
-        calWrap.style.display = 'none';
-        calWrap.innerHTML = '';
-    }
+    } else { calWrap.style.display = 'none'; }
 
-    // 付箋の描画
+    // 付箋
     if (noteContent !== null) {
         noteWrap.style.display = 'block';
         noteWrap.innerHTML = `
@@ -176,83 +190,78 @@ function renderInfoRow() {
                     <h3 class="category-title">Sticky Note</h3>
                     <span class="cat-delete-btn" id="del-note-btn">🗑️</span>
                 </div>
-                <textarea class="note-textarea" id="note-input" placeholder="ここにメモを入力...">${noteContent}</textarea>
+                <textarea class="note-textarea" id="note-input" placeholder="メモを入力...">${noteContent}</textarea>
             </div>`;
-        
-        const input = document.getElementById('note-input');
-        input.oninput = () => {
-            noteContent = input.value;
+        const ni = document.getElementById('note-input');
+        ni.oninput = () => {
+            noteContent = ni.value.substring(0, 5000); // 最大5000文字に制限
             localStorage.setItem('nestTab_note', noteContent);
         };
-        
         document.getElementById('del-note-btn').onclick = () => {
-            if (confirm("付箋を削除しますか？")) {
-                noteContent = null;
-                localStorage.removeItem('nestTab_note');
-                renderInfoRow();
-            }
+            if (confirm("削除しますか？")) { noteContent = null; localStorage.removeItem('nestTab_note'); renderInfoRow(); }
         };
-    } else {
-        noteWrap.style.display = 'none';
-        noteWrap.innerHTML = '';
-    }
+    } else { noteWrap.style.display = 'none'; }
 
-    // カレンダーも付箋もなければ行ごと隠す
     infoRow.style.display = (calUrl || noteContent !== null) ? 'flex' : 'none';
 }
 
 // ==========================================
-// 5. 操作ボタン & 初期化
+// 5. 操作ボタン & バリデーション
 // ==========================================
 
-// カテゴリ追加
 document.getElementById('add-cat-btn').onclick = () => {
-    const n = prompt("新しいカテゴリ名:");
-    if (n && !links[n]) {
-        links[n] = [];
-        saveAndRender();
+    const n = prompt("カテゴリ名:");
+    if (n && n.trim()) {
+        const name = n.trim().substring(0, 20);
+        if (!links[name]) { links[name] = []; saveAndRender(); }
     }
 };
 
-// カレンダー設定
 document.getElementById('cal-setup-btn').onclick = () => {
-    const u = prompt("GoogleカレンダーのURLを入力してください:");
+    const u = prompt("GoogleカレンダーのURLまたは埋め込みコードを入力:");
     if (u) {
+        // バリデーション: URLが含まれているかチェック
         const match = u.match(/src="([^"]+)"/);
-        calUrl = match ? match[1] : u;
-        localStorage.setItem('nestTab_calUrl', calUrl);
-        renderInfoRow();
+        const finalUrl = match ? match[1] : u;
+        
+        if (finalUrl.startsWith('https://calendar.google.com/')) {
+            calUrl = finalUrl;
+            localStorage.setItem('nestTab_calUrl', calUrl);
+            renderInfoRow();
+        } else {
+            alert("無効なGoogleカレンダーURLです。正しくコピーされているか確認してください。");
+        }
     }
 };
 
-// 付箋追加
 document.getElementById('note-setup-btn').onclick = () => {
-    if (noteContent === null) {
-        noteContent = "";
-        localStorage.setItem('nestTab_note', "");
-        renderInfoRow();
-    }
+    if (noteContent === null) { noteContent = ""; localStorage.setItem('nestTab_note', ""); renderInfoRow(); }
 };
 
-// 背景変更
 const bgInput = document.getElementById('bg-input');
 document.getElementById('bg-change-btn').onclick = () => bgInput.click();
-bgInput.onchange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = async (ev) => {
+bgInput.onchange = e => {
+    const f = e.target.files[0];
+    if (f) {
+        if (f.size > 10 * 1024 * 1024) { // 10MB制限
+            alert("画像サイズが大きすぎます（10MB以下にしてください）");
+            return;
+        }
+        const r = new FileReader();
+        r.onload = async ev => {
             const data = ev.target.result;
-            document.getElementById('bg-container').style.backgroundImage = `url(${data})`;
-            document.getElementById('bg-container').style.opacity = 1;
-            const db = await openDB();
-            db.transaction(storeName, "readwrite").objectStore(storeName).put(data, "background");
+            const bg = document.getElementById('bg-container');
+            if (bg) bg.style.backgroundImage = `url(${data})`;
+            try {
+                const db = await openDB();
+                db.transaction(storeName, "readwrite").objectStore(storeName).put(data, "background");
+            } catch (err) { alert("背景の保存に失敗しました（ストレージ容量不足の可能性があります）"); }
         };
-        reader.readAsDataURL(file);
+        r.readAsDataURL(f);
     }
 };
 
-// 起動時処理
+// 起動
 window.addEventListener('DOMContentLoaded', () => {
     loadBackground();
     renderBoard();
