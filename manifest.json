@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "NestTab v2",
-  "version": "2.1.0",
-  "description": "自分専用の管制塔。リンク管理と美しい背景機能。",
+  "name": "NestTab v2 - Control Center",
+  "version": "2.2.0",
+  "description": "カレンダー・背景・リンク管理を備えた自分専用の管制塔",
   "chrome_url_overrides": {
     "newtab": "index.html"
   },

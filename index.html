@@ -8,16 +8,6 @@
 </head>
 <body>
     <div id="bg-container"></div>
-    <div id="calendar-wrapper" class="calendar-unit" style="display:none;">
-    <div class="category-box calendar-box">
-        <div class="category-header">
-            <h3 class="category-title">Schedule</h3>
-            <span id="close-cal-btn" class="cat-delete-btn">×</span>
-        </div>
-        <div id="calendar-content">
-            </div>
-    </div>
-</div>
     
     <div class="main-interface">
         <div class="info-unit">
@@ -35,12 +25,17 @@
             </form>
         </div>
 
+        <div id="calendar-wrapper" class="calendar-unit"></div>
+
         <div id="widgets-container" class="widgets-container"></div>
 
-        <button id="add-cat-btn" class="control-btn" title="カテゴリを追加">＋</button>
+        <div class="bottom-controls">
+            <button id="cal-setup-btn" class="control-btn" title="カレンダーを設定">📅</button>
+            <button id="add-cat-btn" class="control-btn" title="カテゴリを追加">＋</button>
+            <button id="bg-change-btn" class="control-btn" title="背景画像を変更">🖼️</button>
+        </div>
         
         <input type="file" id="bg-input" style="display:none" accept="image/*">
-        <button id="bg-change-btn" class="control-btn" title="背景画像を変更">🖼️</button>
     </div>
 
     <script src="js/script.js"></script>
