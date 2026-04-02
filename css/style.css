@@ -171,3 +171,52 @@ body, html {
 }
 
 #bg-change-btn:hover { background: rgba(255, 255, 255, 0.3); }
+/* リンクアイテムを包むコンテナ */
+.link-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.link-wrapper:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* 既存の .link-item を少し修正（幅を調整） */
+.link-item {
+    flex-grow: 1; /* 削除ボタン以外のスペースを埋める */
+    display: block;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 300;
+    padding: 8px 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* 削除ボタンのスタイル */
+.delete-btn {
+    opacity: 0; /* 普段は隠しておく */
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.4);
+    padding: 0 12px;
+    font-size: 18px;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+/* ホバーした時だけ表示 */
+.link-wrapper:hover .delete-btn {
+    opacity: 1;
+}
+
+.delete-btn:hover {
+    color: #ff5f5f; /* マウスを乗せると赤く光る */
+    transform: scale(1.2);
+}

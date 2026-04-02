@@ -75,27 +75,54 @@ if (bgBtn && bgInput) {
     });
 }
 
-// --- 3. リンク管理 & ドラッグ＆ドロップ ---
+// --- 3. リンク管理 (追加・削除機能付き) ---
 let links = JSON.parse(localStorage.getItem('nestTab_v2_links')) || {
     work: [], hobby: [], others: []
 };
+
+// 削除を実行する関数
+function deleteLink(category, index) {
+    links[category].splice(index, 1); // 指定した項目を削除
+    localStorage.setItem('nestTab_v2_links', JSON.stringify(links)); // 保存
+    renderLinks(); // 再描画
+}
 
 function renderLinks() {
     Object.keys(links).forEach(cat => {
         const list = document.getElementById(`list-${cat}`);
         if (!list) return;
         list.innerHTML = '';
-        links[cat].forEach(item => {
+
+        links[cat].forEach((item, index) => {
+            // コンテナ
+            const wrapper = document.createElement('div');
+            wrapper.className = 'link-wrapper';
+
+            // リンク本体
             const a = document.createElement('a');
             a.className = 'link-item';
             a.href = item.url;
             a.target = '_blank';
             a.textContent = item.title;
-            list.appendChild(a);
+
+            // 削除ボタン (×)
+            const delBtn = document.createElement('span');
+            delBtn.className = 'delete-btn';
+            delBtn.innerHTML = '&times;'; // ×マーク
+            delBtn.title = "このリンクを削除";
+            delBtn.onclick = (e) => {
+                e.preventDefault(); // リンクが開くのを防ぐ
+                deleteLink(cat, index);
+            };
+
+            wrapper.appendChild(a);
+            wrapper.appendChild(delBtn);
+            list.appendChild(wrapper);
         });
     });
 }
 
+// ドラッグ＆ドロップのイベント
 document.querySelectorAll('.category-box').forEach(box => {
     box.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -108,7 +135,8 @@ document.querySelectorAll('.category-box').forEach(box => {
         e.preventDefault();
         box.style.borderColor = 'rgba(255, 255, 255, 0.1)';
         const cat = box.dataset.category;
-        const url = e.dataTransfer.getData('text/plain');
+        const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+        
         let title = url;
         const html = e.dataTransfer.getData('text/html');
         if (html) {
@@ -117,8 +145,9 @@ document.querySelectorAll('.category-box').forEach(box => {
             const linkTag = doc.querySelector('a');
             if (linkTag) title = linkTag.textContent || url;
         }
-        if (url && url.startsWith('http')) {
-            links[cat].push({ title: title, url: url });
+
+        if (url && (url.startsWith('http') || url.startsWith('https'))) {
+            links[cat].push({ title: title.trim(), url: url.trim() });
             localStorage.setItem('nestTab_v2_links', JSON.stringify(links));
             renderLinks();
         }
