@@ -60,21 +60,34 @@ body, html {
     color: #8cced7;
 }
 
-/* 検索窓 */
+/* --- 5. Google 検索窓（統一感アップ版） --- */
 .search-unit {
     width: 100%;
     max-width: 580px;
     margin-bottom: 40px;
 }
+
 .search-bar {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
+    /* 他のボックスと同じ設定に変更 */
+    background: rgba(0, 0, 0, 0.2); 
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1); /* 薄い白枠 */
     border-radius: 30px;
     padding: 12px 25px;
     display: flex;
     align-items: center;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
 }
+
+/* ホバー時に少し明るくして、反応を出す */
+.search-bar:hover, .search-bar:focus-within {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
 .search-bar input {
     border: none;
     background: transparent;
@@ -82,7 +95,16 @@ body, html {
     font-size: 16px;
     padding: 0 15px;
     outline: none;
-    color: #202124;
+    color: white; /* 文字を白に変更 */
+}
+
+/* プレースホルダー（薄いグレーの文字）の色も調整 */
+.search-bar input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.search-icon { 
+    color: rgba(255, 255, 255, 0.5); /* 虫眼鏡アイコンも少し透かす */
 }
 
 /* カレンダーエリア */
