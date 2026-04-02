@@ -11,10 +11,43 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-// --- 2. 背景画像管理 (localStorage) ---
+// --- 2. 背景画像管理 (IndexedDB版: 大容量対応) ---
+const dbName = "NestTabDB";
+const storeName = "settings";
+
+// データベースの準備
+function openDB() {
+    return new Promise((resolve) => {
+        const request = indexedDB.open(dbName, 1);
+        request.onupgradeneeded = (e) => {
+            e.target.result.createObjectStore(storeName);
+        };
+        request.onsuccess = (e) => resolve(e.target.result);
+    });
+}
+
+// 背景画像を保存
+async function saveBackground(base64) {
+    const db = await openDB();
+    const tx = db.transaction(storeName, "readwrite");
+    tx.objectStore(storeName).put(base64, "background");
+}
+
+// 背景画像を読み込み
+async function loadBackground() {
+    const db = await openDB();
+    const tx = db.transaction(storeName, "readonly");
+    const request = tx.objectStore(storeName).get("background");
+    request.onsuccess = () => {
+        if (request.result) {
+            document.getElementById('bg-container').style.backgroundImage = `url(${request.result})`;
+            document.getElementById('bg-container').style.opacity = 1;
+        }
+    };
+}
+
 const bgInput = document.getElementById('bg-input');
 const bgBtn = document.getElementById('bg-change-btn');
-const bgContainer = document.getElementById('bg-container');
 
 bgBtn.addEventListener('click', () => bgInput.click());
 
@@ -23,15 +56,15 @@ bgInput.addEventListener('change', (e) => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
         const imgBase64 = event.target.result;
-        bgContainer.style.backgroundImage = `url(${imgBase64})`;
-        localStorage.setItem('nestTab_v2_bg', imgBase64);
+        document.getElementById('bg-container').style.backgroundImage = `url(${imgBase64})`;
+        await saveBackground(imgBase64); // IndexedDBに保存
     };
     reader.readAsDataURL(file);
 });
 
-// --- 3. リンク管理 & ドラッグ＆ドロップ ---
+// --- 3. リンク管理 (こちらは軽いのでlocalStorageでOK) ---
 let links = JSON.parse(localStorage.getItem('nestTab_v2_links')) || {
     work: [], hobby: [], others: []
 };
@@ -57,19 +90,15 @@ document.querySelectorAll('.category-box').forEach(box => {
         e.preventDefault();
         box.style.borderColor = '#8cced7';
     });
-
     box.addEventListener('dragleave', () => {
         box.style.borderColor = 'rgba(255, 255, 255, 0.1)';
     });
-
     box.addEventListener('drop', (e) => {
         e.preventDefault();
         box.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-        
         const cat = box.dataset.category;
         const url = e.dataTransfer.getData('text/plain');
         let title = url;
-
         const html = e.dataTransfer.getData('text/html');
         if (html) {
             const parser = new DOMParser();
@@ -77,7 +106,6 @@ document.querySelectorAll('.category-box').forEach(box => {
             const linkTag = doc.querySelector('a');
             if (linkTag) title = linkTag.textContent || url;
         }
-
         if (url && url.startsWith('http')) {
             links[cat].push({ title: title, url: url });
             localStorage.setItem('nestTab_v2_links', JSON.stringify(links));
@@ -88,7 +116,6 @@ document.querySelectorAll('.category-box').forEach(box => {
 
 // 初期化
 window.addEventListener('DOMContentLoaded', () => {
-    const savedBg = localStorage.getItem('nestTab_v2_bg');
-    if (savedBg) bgContainer.style.backgroundImage = `url(${savedBg})`;
+    loadBackground(); // IndexedDBから背景を呼ぶ
     renderLinks();
 });
