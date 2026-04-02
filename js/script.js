@@ -3,7 +3,7 @@
 // ==========================================
 const DB_NAME = "OrbitTabDB";
 const STORE_NAME = "settings";
-const NOTE_URL = "https://note.com/あなたのID/m/OrbitTabマガジンURL"; // 後で書き換えてください
+const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153"; 
 
 // 初めて使うユーザーへの初期データ
 const DEFAULT_LINKS = {
