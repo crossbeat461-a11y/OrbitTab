@@ -1,10 +1,32 @@
 // ==========================================
-// 0. 安全なデータ取得ユーティリティ
+// 0. 初期設定 & 定数
+// ==========================================
+const DB_NAME = "OrbitTabDB";
+const STORE_NAME = "settings";
+const NOTE_URL = "https://note.com/あなたのID/m/OrbitTabマガジンURL"; // 後で書き換えてください
+
+// 初めて使うユーザーへの初期データ
+const DEFAULT_LINKS = {
+    "Search & Mail": [
+        { title: "Google", url: "https://www.google.com" },
+        { title: "Gmail", url: "https://mail.google.com" }
+    ],
+    "OrbitTab Guide": [
+        { title: "使いこなしガイド (note)", url: NOTE_URL }
+    ]
+};
+
+const WELCOME_MSG = "🚀 OrbitTab へようこそ！\n\nここはあなた専用のデジタル管制塔です。\n\n・右下の ＋ でカテゴリ追加\n・ブラウザからリンクをドロップして登録\n・📅 でカレンダー連携\n・🖼️ でお気に入りの背景を設定\n\n自分だけの「軌道（Orbit）」を作りましょう。";
+
+const DEFAULT_BG_STYLE = "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)";
+
+// ==========================================
+// 1. 安全なデータ取得ユーティリティ
 // ==========================================
 function getSafeStorage(key, defaultValue) {
     try {
         const item = localStorage.getItem(key);
-        if (!item) return defaultValue;
+        if (item === null) return defaultValue;
         return JSON.parse(item);
     } catch (e) {
         console.error(`Storage error for ${key}:`, e);
@@ -13,7 +35,7 @@ function getSafeStorage(key, defaultValue) {
 }
 
 // ==========================================
-// 1. 時計 & 日付更新機能
+// 2. 時計 & 日付更新機能
 // ==========================================
 function updateClock() {
     const clockElement = document.getElementById('clock');
@@ -30,15 +52,13 @@ setInterval(updateClock, 1000);
 updateClock();
 
 // ==========================================
-// 2. 背景画像管理 (IndexedDB)
+// 3. 背景画像管理 (IndexedDB)
 // ==========================================
-const dbName = "NestTabDB", storeName = "settings";
-
 function openDB() {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open(dbName, 2);
+        const request = indexedDB.open(DB_NAME, 2);
         request.onupgradeneeded = e => {
-            if (!e.target.result.objectStoreNames.contains(storeName)) e.target.result.createObjectStore(storeName);
+            if (!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME);
         };
         request.onsuccess = e => resolve(e.target.result);
         request.onerror = e => reject(e.target.error);
@@ -46,36 +66,38 @@ function openDB() {
 }
 
 async function loadBackground() {
+    const bg = document.getElementById('bg-container');
+    if (!bg) return;
+
     try {
         const db = await openDB();
-        const request = db.transaction(storeName, "readonly").objectStore(storeName).get("background");
+        const request = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).get("background");
+        
         request.onsuccess = () => {
-            const bg = document.getElementById('bg-container');
-            if (request.result && bg) {
+            if (request.result) {
                 bg.style.backgroundImage = `url(${request.result})`;
-                bg.style.opacity = 1;
-            } else if (bg) {
-                bg.style.opacity = 1; // 背景がない場合はデフォルト色を表示
+                bg.style.backgroundSize = "cover";
+            } else {
+                bg.style.background = DEFAULT_BG_STYLE;
             }
+            bg.style.opacity = 1;
         };
     } catch (err) {
-        console.warn("Background load failed, using default color.", err);
-        const bg = document.getElementById('bg-container');
-        if (bg) bg.style.opacity = 1;
+        bg.style.background = DEFAULT_BG_STYLE;
+        bg.style.opacity = 1;
     }
 }
 
 // ==========================================
-// 3. リンク & カテゴリ管理 (堅牢化版)
+// 4. リンク & カテゴリ管理
 // ==========================================
-// 初期値の設定をより安全に
-let links = getSafeStorage('nestTab_v3_links', { "Work": [], "Hobby": [] });
+let links = getSafeStorage('orbitTab_v1_links', DEFAULT_LINKS);
 
 function saveAndRender() {
     try {
-        localStorage.setItem('nestTab_v3_links', JSON.stringify(links));
+        localStorage.setItem('orbitTab_v1_links', JSON.stringify(links));
     } catch (e) {
-        alert("保存容量がいっぱいです。不要なリンクを削除してください。");
+        alert("保存容量がいっぱいです。不要なデータを削除してください。");
     }
     renderBoard();
 }
@@ -103,7 +125,6 @@ function renderBoard() {
             }
         };
 
-        // ドラッグ＆ドロップ
         box.ondragover = e => e.preventDefault();
         box.ondrop = e => {
             e.preventDefault();
@@ -154,10 +175,15 @@ function renderBoard() {
 }
 
 // ==========================================
-// 4. カレンダー & 付箋管理 (堅牢化版)
+// 5. カレンダー & 付箋管理
 // ==========================================
-let calUrl = localStorage.getItem('nestTab_calUrl') || "";
-let noteContent = localStorage.getItem('nestTab_note') || null;
+let calUrl = localStorage.getItem('orbitTab_calUrl') || "";
+let noteContent = localStorage.getItem('orbitTab_note');
+
+// 初回起動時にウェルカムメッセージを表示
+if (noteContent === null) {
+    noteContent = WELCOME_MSG;
+}
 
 function renderInfoRow() {
     const infoRow = document.getElementById('info-row');
@@ -165,7 +191,7 @@ function renderInfoRow() {
     const noteWrap = document.getElementById('notes-wrapper');
     if (!infoRow || !calWrap || !noteWrap) return;
 
-    // カレンダー
+    // カレンダー表示
     if (calUrl) {
         calWrap.style.display = 'block';
         calWrap.innerHTML = `
@@ -177,11 +203,15 @@ function renderInfoRow() {
                 <iframe src="${calUrl}" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
             </div>`;
         document.getElementById('del-cal-btn').onclick = () => {
-            if (confirm("解除しますか？")) { calUrl = ""; localStorage.removeItem('nestTab_calUrl'); renderInfoRow(); }
+            if (confirm("カレンダー連携を解除しますか？")) { 
+                calUrl = ""; 
+                localStorage.removeItem('orbitTab_calUrl'); 
+                renderInfoRow(); 
+            }
         };
     } else { calWrap.style.display = 'none'; }
 
-    // 付箋
+    // 付箋表示
     if (noteContent !== null) {
         noteWrap.style.display = 'block';
         noteWrap.innerHTML = `
@@ -194,11 +224,15 @@ function renderInfoRow() {
             </div>`;
         const ni = document.getElementById('note-input');
         ni.oninput = () => {
-            noteContent = ni.value.substring(0, 5000); // 最大5000文字に制限
-            localStorage.setItem('nestTab_note', noteContent);
+            noteContent = ni.value.substring(0, 5000);
+            localStorage.setItem('orbitTab_note', noteContent);
         };
         document.getElementById('del-note-btn').onclick = () => {
-            if (confirm("削除しますか？")) { noteContent = null; localStorage.removeItem('nestTab_note'); renderInfoRow(); }
+            if (confirm("付箋を削除しますか？")) { 
+                noteContent = null; 
+                localStorage.removeItem('orbitTab_note'); 
+                renderInfoRow(); 
+            }
         };
     } else { noteWrap.style.display = 'none'; }
 
@@ -206,11 +240,17 @@ function renderInfoRow() {
 }
 
 // ==========================================
-// 5. 操作ボタン & バリデーション
+// 6. UIイベント・バリデーション
 // ==========================================
 
+// noteガイドボタン
+const guideBtn = document.getElementById('guide-btn');
+if (guideBtn) {
+    guideBtn.onclick = () => window.open(NOTE_URL, '_blank');
+}
+
 document.getElementById('add-cat-btn').onclick = () => {
-    const n = prompt("カテゴリ名:");
+    const n = prompt("新しいカテゴリ名:");
     if (n && n.trim()) {
         const name = n.trim().substring(0, 20);
         if (!links[name]) { links[name] = []; saveAndRender(); }
@@ -218,24 +258,26 @@ document.getElementById('add-cat-btn').onclick = () => {
 };
 
 document.getElementById('cal-setup-btn').onclick = () => {
-    const u = prompt("GoogleカレンダーのURLまたは埋め込みコードを入力:");
+    const u = prompt("Googleカレンダーの埋め込みURLを入力してください:");
     if (u) {
-        // バリデーション: URLが含まれているかチェック
         const match = u.match(/src="([^"]+)"/);
         const finalUrl = match ? match[1] : u;
-        
         if (finalUrl.startsWith('https://calendar.google.com/')) {
             calUrl = finalUrl;
-            localStorage.setItem('nestTab_calUrl', calUrl);
+            localStorage.setItem('orbitTab_calUrl', calUrl);
             renderInfoRow();
         } else {
-            alert("無効なGoogleカレンダーURLです。正しくコピーされているか確認してください。");
+            alert("有効なGoogleカレンダーURLではありません。");
         }
     }
 };
 
 document.getElementById('note-setup-btn').onclick = () => {
-    if (noteContent === null) { noteContent = ""; localStorage.setItem('nestTab_note', ""); renderInfoRow(); }
+    if (noteContent === null) {
+        noteContent = "";
+        localStorage.setItem('orbitTab_note', "");
+        renderInfoRow();
+    }
 };
 
 const bgInput = document.getElementById('bg-input');
@@ -243,25 +285,28 @@ document.getElementById('bg-change-btn').onclick = () => bgInput.click();
 bgInput.onchange = e => {
     const f = e.target.files[0];
     if (f) {
-        if (f.size > 10 * 1024 * 1024) { // 10MB制限
-            alert("画像サイズが大きすぎます（10MB以下にしてください）");
+        if (f.size > 10 * 1024 * 1024) {
+            alert("画像サイズは10MB以下にしてください。");
             return;
         }
         const r = new FileReader();
         r.onload = async ev => {
             const data = ev.target.result;
             const bg = document.getElementById('bg-container');
-            if (bg) bg.style.backgroundImage = `url(${data})`;
+            if (bg) {
+                bg.style.backgroundImage = `url(${data})`;
+                bg.style.backgroundSize = "cover";
+            }
             try {
                 const db = await openDB();
-                db.transaction(storeName, "readwrite").objectStore(storeName).put(data, "background");
-            } catch (err) { alert("背景の保存に失敗しました（ストレージ容量不足の可能性があります）"); }
+                db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(data, "background");
+            } catch (err) { alert("保存に失敗しました。"); }
         };
         r.readAsDataURL(f);
     }
 };
 
-// 起動
+// 起動処理
 window.addEventListener('DOMContentLoaded', () => {
     loadBackground();
     renderBoard();
