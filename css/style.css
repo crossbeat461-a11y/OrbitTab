@@ -7,7 +7,7 @@
     box-sizing: border-box;
 }
 
-/* ページ全体でスクロールを許可 */
+/* ページ全体でスクロールを許可（ウィジェットが画面外に出た時用） */
 html, body {
     width: 100%;
     min-height: 100vh;
@@ -15,9 +15,10 @@ html, body {
     overflow-x: hidden;
     font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
     color: #ffffff;
+    background-color: #000; /* 背景画像読み込み前の黒 */
 }
 
-/* 背景コンテナ：画面に固定（スクロールしても動かない） */
+/* 背景コンテナ：画面にピン留め */
 #bg-container {
     position: fixed;
     top: 0;
@@ -32,189 +33,239 @@ html, body {
     opacity: 0; /* JSで読み込み後に1になります */
 }
 
-/* メインインターフェース：中身に合わせて伸びるように修正 */
+/* メインインターフェース */
 .main-interface {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     width: 100%;
-    min-height: 100vh; /* 最低でも画面いっぱいの高さ */
-    padding-top: 5vh;
-    padding-bottom: 150px; /* 下のボタンと被らないための余白 */
-    background: rgba(0, 0, 0, 0.2); /* 背景を少し暗くして視認性アップ */
+    min-height: 100vh;
+    padding-bottom: 100px; /* 下のボタンとの余白 */
+    background: rgba(0, 0, 0, 0.1); /* 背景画像の邪魔をしない程度の暗さ */
 }
 
 /* ==========================================
-   1. 時計 & 日付
+   1. 時計 & 日付（初期配置：上部中央固定）
    ========================================== */
 .info-unit {
+    position: absolute;
+    top: 5vh;
+    left: 50%;
+    transform: translateX(-50%);
     text-align: center;
     margin-bottom: 30px;
     text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    z-index: 5; /* ウィジェットより下に配置 */
 }
 
 #clock {
     font-size: 100px;
-    font-weight: 200;
+    font-weight: 100; /* さらにミニマルに薄く */
     letter-spacing: -2px;
     line-height: 1;
 }
 
 #date {
-    font-size: 20px;
-    font-weight: 400;
-    margin-top: 10px;
-    opacity: 0.9;
+    font-size: 18px;
+    font-weight: 300;
+    margin-top: 5px;
+    opacity: 0.8;
 }
 
 /* ==========================================
-   2. 検索バー
+   2. 検索バー（初期配置：時計の下固定）
    ========================================== */
 .search-unit {
-    margin-bottom: 50px;
+    position: absolute;
+    top: calc(5vh + 150px); /* 時計の下 */
+    left: 50%;
+    transform: translateX(-50%);
     width: 100%;
-    max-width: 500px;
+    max-width: 480px;
+    z-index: 5;
 }
 
 .search-bar {
     display: flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 30px;
-    padding: 10px 20px;
+    padding: 8px 18px;
     transition: all 0.3s ease;
 }
 
 .search-bar:focus-within {
-    background: rgba(255, 255, 255, 0.25);
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .search-bar input {
     background: transparent;
     border: none;
     color: white;
-    font-size: 16px;
+    font-size: 15px;
     width: 100%;
     margin-left: 10px;
     outline: none;
 }
 
 .search-bar input::placeholder {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* ==========================================
-   3. レイアウト（カレンダー & 付箋 & リンク）
+   3. ウィジェット共通スタイル（自由配置・グラスモーフィズム）
    ========================================== */
-.info-row {
+.widget {
+    position: absolute; /* 自由配置の鍵 */
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     display: flex;
-    gap: 20px;
-    margin-bottom: 30px;
-    width: 90%;
-    max-width: 1000px;
-    justify-content: center;
-    flex-wrap: wrap; /* 画面が狭い時に折り返す */
+    flex-direction: column;
+    overflow: hidden; /* 中身のはみ出し防止 */
+    transition: box-shadow 0.2s, background 0.2s;
+    min-width: 200px;
+    min-height: 150px;
 }
 
-.info-column {
-    flex: 1;
-    min-width: 300px;
+/* ホバー時に少し浮く演出 */
+.widget:hover {
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
 }
 
-/* 共通ボックススタイル */
-.category-box, .calendar-box, .note-box {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 15px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    margin-bottom: 20px;
+/* アクティブな（操作中の）ウィジェットを最前に */
+.widget.active {
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
 }
 
-/* リンクボックスの並び：内側スクロールを廃止 */
-.widgets-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
-    width: 90%;
-    max-width: 1200px;
-    /* overflow-y: auto; を削除して全体スクロールに任せる */
-}
-
-/* ==========================================
-   4. パーツ詳細
-   ========================================== */
-.category-header {
+/* ウィジェットのヘッダー（ドラッグハンドル） */
+.widget-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 8px;
+    padding: 10px 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    cursor: move; /* 十字カーソル */
+    user-select: none; /* テキスト選択防止 */
+}
+
+.widget-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* リサイズハンドル（右下） */
+.resizer {
+    width: 15px;
+    height: 15px;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    cursor: nwse-resize; /* 斜め矢印カーソル */
+    z-index: 10;
+}
+
+/* つまみの小さな三角形 */
+.resizer::after {
+    content: "";
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 0 8px 8px;
+    border-color: transparent transparent rgba(255, 255, 255, 0.2) transparent;
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+}
+
+/* ==========================================
+   4. 各ウィジェットの詳細
+   ========================================== */
+
+/* リンクボックス（カテゴリー）の中身 */
+.link-list {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto; /* リンクが増えたら内側スクロール */
 }
 
 .category-title {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #00d2ff;
+    color: #00d2ff; /* スカイブルー */
 }
 
+/* リンク行 */
 .link-wrapper {
     display: flex;
     align-items: center;
-    padding: 8px;
-    border-radius: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
     cursor: pointer;
     transition: background 0.2s;
 }
 
 .link-wrapper:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .link-title {
     flex: 1;
-    font-size: 14px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.9);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
+/* 削除ボタン群 */
 .delete-btn, .cat-delete-btn {
-    opacity: 0.3;
+    opacity: 0.2;
     cursor: pointer;
     transition: opacity 0.2s;
+    font-size: 12px;
+}
+
+.widget-header:hover .cat-delete-btn,
+.link-wrapper:hover .delete-btn {
+    opacity: 1;
 }
 
 .delete-btn:hover, .cat-delete-btn:hover {
-    opacity: 1;
     color: #ff4b2b;
 }
 
-iframe {
+/* カレンダー (iframe) */
+.calendar-iframe {
     width: 100%;
-    height: 300px;
+    flex: 1;
     border: none;
-    border-radius: 8px;
-    filter: invert(0.9) hue-rotate(180deg);
+    border-radius: 0 0 12px 12px;
+    filter: invert(0.9) hue-rotate(180deg); /* ダークモード風 */
+    pointer-events: auto; /* iframe内を操作可能に */
 }
 
+/* 付箋 (textarea) */
 .note-textarea {
     width: 100%;
-    height: 150px;
+    flex: 1;
     background: transparent;
     border: none;
-    color: white;
+    color: rgba(255, 255, 255, 0.9);
     resize: none;
-    font-size: 14px;
+    font-size: 13px;
     line-height: 1.6;
     outline: none;
+    padding: 15px;
+    border-radius: 0 0 12px 12px;
 }
 
 /* ==========================================
@@ -222,31 +273,31 @@ iframe {
    ========================================== */
 .bottom-controls {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
+    bottom: 25px;
+    right: 25px;
     display: flex;
-    gap: 12px;
-    z-index: 1000; /* 常に最前面 */
+    gap: 10px;
+    z-index: 2000; /* 常に最前面 */
 }
 
 .control-btn {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(10px);
     color: white;
-    font-size: 20px;
+    font-size: 18px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
 .control-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-3px);
 }

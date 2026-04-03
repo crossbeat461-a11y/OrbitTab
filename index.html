@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OrbitTab | Your Control Center</title>
+    <title>OrbitTab | Your Private Cockpit</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -24,18 +24,20 @@
             </form>
         </div>
 
-        <div id="info-row" class="info-row" style="display: none;">
-            <div id="calendar-wrapper" class="info-column"></div>
-            <div id="notes-wrapper" class="info-column"></div>
-        </div>
+        <div id="widgets-container">
+            <div class="widget calendar-box" id="cal-widget" style="display: none;">
+                </div>
 
-        <div id="widgets-container" class="widgets-container"></div>
+            <div class="widget note-box" id="note-widget" style="display: none;">
+                </div>
+
+            </div>
 
         <div class="bottom-controls">
             <button id="guide-btn" class="control-btn" title="OrbitTab マガジン (note)">📖</button>
-            <button id="note-setup-btn" class="control-btn" title="付箋を追加">📝</button>
-            <button id="cal-setup-btn" class="control-btn" title="カレンダー設定">📅</button>
-            <button id="add-cat-btn" class="control-btn" title="カテゴリ追加">＋</button>
+            <button id="note-setup-btn" class="control-btn" title="付箋を追加/表示">📝</button>
+            <button id="cal-setup-btn" class="control-btn" title="カレンダー設定/表示">📅</button>
+            <button id="add-cat-btn" class="control-btn" title="カテゴリー追加">＋</button>
             <button id="bg-change-btn" class="control-btn" title="背景変更">🖼️</button>
         </div>
         
