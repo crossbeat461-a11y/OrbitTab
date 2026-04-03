@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OrbitTab | Your Private Cockpit</title>
+    <title>OrbitTab | Global Cockpit</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div id="bg-container"></div>
 
     <div class="main-interface">
+        
         <div class="info-unit">
             <div id="clock">00:00</div>
             <div id="date">----年--月--日(--)</div>
@@ -25,20 +26,16 @@
         </div>
 
         <div id="widgets-container">
-            <div class="widget calendar-box" id="cal-widget" style="display: none;">
-                </div>
-
-            <div class="widget note-box" id="note-widget" style="display: none;">
-                </div>
-
-            </div>
+            <div class="widget calendar-box" id="cal-widget" style="display: none;"></div>
+            <div class="widget note-box" id="note-widget" style="display: none;"></div>
+        </div>
 
         <div class="bottom-controls">
-            <button id="guide-btn" class="control-btn" title="OrbitTab マガジン (note)">📖</button>
-            <button id="note-setup-btn" class="control-btn" title="付箋を追加/表示">📝</button>
-            <button id="cal-setup-btn" class="control-btn" title="カレンダー設定/表示">📅</button>
-            <button id="add-cat-btn" class="control-btn" title="カテゴリー追加">＋</button>
-            <button id="bg-change-btn" class="control-btn" title="背景変更">🖼️</button>
+            <button id="guide-btn" class="control-btn">📖</button>
+            <button id="note-setup-btn" class="control-btn">📝</button>
+            <button id="cal-setup-btn" class="control-btn">📅</button>
+            <button id="add-cat-btn" class="control-btn">＋</button>
+            <button id="bg-change-btn" class="control-btn">🖼️</button>
         </div>
         
         <input type="file" id="bg-input" style="display:none" accept="image/*">
