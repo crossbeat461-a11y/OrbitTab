@@ -73,11 +73,13 @@ async function loadBackground() {
         const request = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).get("background");
         request.onsuccess = () => {
             if (request.result) {
+                // background 全体ではなく backgroundImage だけを更新し、CSSの cover 設定を維持する
                 bg.style.backgroundImage = `url(${request.result})`;
             } else {
                 bg.style.background = DEFAULT_BG_STYLE;
             }
-            bg.style.opacity = 1;
+            // 画像セット後にフェードイン
+            setTimeout(() => { bg.style.opacity = 1; }, 50);
         };
     } catch (err) {
         bg.style.background = DEFAULT_BG_STYLE;
@@ -99,7 +101,6 @@ function makeWidget(el, storageKey, defaultLayout) {
     el.style.width = saved.w + 'px';
     el.style.height = saved.h + 'px';
 
-    // リサイズ処理
     const resizer = el.querySelector('.resizer') || document.createElement('div');
     if (!el.querySelector('.resizer')) {
         resizer.className = 'resizer';
@@ -107,7 +108,7 @@ function makeWidget(el, storageKey, defaultLayout) {
     }
     
     resizer.onmousedown = (e) => {
-        if (e.button !== 0) return; // 左クリックのみ
+        if (e.button !== 0) return; 
         isResizing = true;
         startX = e.clientX; startY = e.clientY;
         startW = el.offsetWidth; startH = el.offsetHeight;
@@ -121,8 +122,7 @@ function makeWidget(el, storageKey, defaultLayout) {
     
     if (header) {
         header.onmousedown = (e) => {
-            // ★超重要：左クリック(0)かつControlなしの時だけドラッグを開始
-            // 右クリック(2)やControl+クリックは、名前変更のためにスルーさせる
+            // ★超重要：左クリック(0)かつControlなしの時だけドラッグ。右クリック(2)はスルー
             if (e.button !== 0 || e.ctrlKey) return; 
             if (e.target.classList.contains('cat-delete-btn')) return;
             
@@ -180,8 +180,13 @@ function renderBoard() {
     const container = document.getElementById('widgets-container');
     if (!container) return;
 
-    // 一旦クリア
-    container.querySelectorAll('.category-box').forEach(w => w.remove());
+    // ★重要：NotFoundError対策。contains で存在確認してから安全に削除
+    const existingBoxes = container.querySelectorAll('.category-box');
+    existingBoxes.forEach(w => {
+        if (container.contains(w)) {
+            container.removeChild(w);
+        }
+    });
 
     Object.keys(links).forEach((cat, index) => {
         const box = document.createElement('div');
@@ -196,23 +201,19 @@ function renderBoard() {
 
         const header = box.querySelector('.widget-header');
 
-        // ★ 名前変更のメイン関数
         const renameHandler = (e) => {
             e.preventDefault();
             e.stopPropagation();
             
             const titleEl = header.querySelector('.widget-title');
+            if (!titleEl) return; // 既にinputに置き換わっている場合などの二重発火防止
+
             const currentName = cat;
             const input = document.createElement('input');
             input.type = 'text';
             input.value = currentName;
-            input.style.width = '100%';
-            input.style.border = 'none';
-            input.style.background = 'transparent';
-            input.style.color = '#00d2ff';
-            input.style.fontSize = 'inherit';
-            input.style.fontWeight = 'bold';
-            input.style.outline = 'none';
+            input.style.cssText = 'width: 100%; border: none; background: transparent; color: #00d2ff; font-size: inherit; font-weight: bold; outline: none;';
+            
             titleEl.replaceWith(input);
             input.focus();
             input.select();
@@ -221,12 +222,9 @@ function renderBoard() {
                 const newName = input.value.trim();
                 if (newName && newName !== currentName) {
                     const name = newName.substring(0, 20);
-                    
-                    // データの移行
                     links[name] = links[cat];
                     delete links[cat];
                     
-                    // レイアウト設定も新しい名前に引き継ぐ
                     const oldKey = `orbitTab_layout_cat_${cat}`;
                     const newKey = `orbitTab_layout_cat_${name}`;
                     const oldLayout = localStorage.getItem(oldKey);
@@ -234,30 +232,22 @@ function renderBoard() {
                         localStorage.setItem(newKey, oldLayout);
                         localStorage.removeItem(oldKey);
                     }
-                    
                     saveAndRender();
                 } else {
-                    titleEl.textContent = currentName;
-                    input.replaceWith(titleEl);
+                    renderBoard(); // キャンセル時は再描画で元に戻す
                 }
             };
             
-            input.addEventListener('blur', save);
+            input.addEventListener('blur', save, { once: true });
             input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    save();
-                } else if (e.key === 'Escape') {
-                    titleEl.textContent = currentName;
-                    input.replaceWith(titleEl);
-                }
+                if (e.key === 'Enter') save();
+                if (e.key === 'Escape') renderBoard();
             });
         };
 
-        // 右クリックとダブルクリックの両方に登録
         header.addEventListener('contextmenu', renameHandler);
         header.addEventListener('dblclick', renameHandler);
 
-        // 🗑️ 削除ボタン
         box.querySelector('.cat-delete-btn').onclick = (e) => {
             e.stopPropagation();
             if (confirm(`カテゴリー「${cat}」を削除しますか？`)) {
@@ -266,7 +256,6 @@ function renderBoard() {
             }
         };
 
-        // ドロップ処理
         box.ondragover = e => e.preventDefault();
         box.ondrop = e => {
             e.preventDefault();
@@ -291,7 +280,6 @@ function renderBoard() {
             wrap.querySelector('.link-title').onclick = () => window.open(item.url, '_blank');
             wrap.querySelector('.delete-btn').onclick = () => { links[cat].splice(idx, 1); saveAndRender(); };
             
-            // リンクタイトルの右クリック編集
             wrap.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -301,34 +289,26 @@ function renderBoard() {
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.value = currentTitle;
-                input.style.width = '100%';
-                input.style.border = 'none';
-                input.style.background = 'transparent';
-                input.style.color = 'inherit';
-                input.style.outline = 'none';
+                input.style.cssText = 'width: 100%; border: none; background: transparent; color: inherit; outline: none;';
+                
                 titleEl.replaceWith(input);
                 input.focus();
                 input.select();
                 
-                const save = () => {
+                const saveLink = () => {
                     const newTitle = input.value.trim();
                     if (newTitle) {
                         item.title = newTitle;
                         saveAndRender();
                     } else {
-                        titleEl.textContent = currentTitle;
-                        input.replaceWith(titleEl);
+                        renderBoard();
                     }
                 };
                 
-                input.addEventListener('blur', save);
+                input.addEventListener('blur', saveLink, { once: true });
                 input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        save();
-                    } else if (e.key === 'Escape') {
-                        titleEl.textContent = currentTitle;
-                        input.replaceWith(titleEl);
-                    }
+                    if (e.key === 'Enter') saveLink();
+                    if (e.key === 'Escape') renderBoard();
                 });
             });
             
@@ -407,7 +387,9 @@ bgInput.onchange = e => {
         const r = new FileReader();
         r.onload = async ev => {
             const data = ev.target.result;
-            document.getElementById('bg-container').style.backgroundImage = `url(${data})`;
+            const bg = document.getElementById('bg-container');
+            // backgroundImage だけをセットし、CSSの cover 設定を活かす
+            bg.style.backgroundImage = `url(${data})`;
             const db = await openDB();
             db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(data, "background");
         };
