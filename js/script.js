@@ -18,7 +18,6 @@ const DEFAULT_LINKS = {
 const WELCOME_MSG = "🚀 OrbitTab へようこそ！\n\nここはあなた専用のデジタル管制塔です。\n\n・全ての窓は、上のグレー部分を掴んで移動、右下でサイズ変更できます。";
 const DEFAULT_BG_STYLE = "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)";
 
-// 初期レイアウト（image_1.pngに基づく）
 const INITIAL_LAYOUT = {
     calendar: { left: 100, top: 300, w: 500, h: 400 },
     note:     { left: 680, top: 300, w: 500, h: 400 },
@@ -87,7 +86,7 @@ async function loadBackground() {
 }
 
 // ==========================================
-// 3. ウィジェット化コア関数
+// 3. ウィジェット化コア関数（競合防止版）
 // ==========================================
 function makeWidget(el, storageKey, defaultLayout) {
     if (!el) return;
@@ -105,6 +104,7 @@ function makeWidget(el, storageKey, defaultLayout) {
         resizer.className = 'resizer';
         el.appendChild(resizer);
         resizer.onmousedown = (e) => {
+            if (e.button !== 0) return; // 左クリックのみ
             isResizing = true;
             startX = e.clientX; startY = e.clientY;
             startW = el.offsetWidth; startH = el.offsetHeight;
@@ -118,6 +118,8 @@ function makeWidget(el, storageKey, defaultLayout) {
     el.onmousedown = () => bringToFront(el);
     if (header) {
         header.onmousedown = (e) => {
+            // ★重要：左クリック(0)のみドラッグ。右クリックはスルーさせる
+            if (e.button !== 0) return;
             if (e.target.classList.contains('cat-delete-btn')) return;
             isDragging = true;
             startX = e.clientX; startY = e.clientY;
@@ -173,7 +175,6 @@ function renderBoard() {
     const container = document.getElementById('widgets-container');
     if (!container) return;
 
-    // カテゴリーボックスのみをクリアして再描画
     container.querySelectorAll('.category-box').forEach(w => w.remove());
 
     Object.keys(links).forEach((cat, index) => {
@@ -194,7 +195,6 @@ function renderBoard() {
             }
         };
 
-        // ドロップ処理
         box.ondragover = e => e.preventDefault();
         box.ondrop = e => {
             e.preventDefault();
@@ -261,7 +261,48 @@ function renderSpecialWidgets() {
 }
 
 // ==========================================
-// 5. ボタンイベント & 起動
+// 5. 右クリック名前変更（決定版：Mac/Win両対応）
+// ==========================================
+document.addEventListener('contextmenu', (e) => {
+    // 右クリックされた要素がヘッダーの中身かチェック
+    const header = e.target.closest('.widget-header');
+    if (!header) return;
+
+    // カテゴリーボックスのみを対象にする
+    const widget = header.closest('.category-box');
+    if (!widget) return;
+
+    e.preventDefault(); // システムメニューを確実にブロック
+
+    const titleEl = header.querySelector('.widget-title');
+    const oldName = titleEl.innerText;
+    
+    // ダイアログを表示
+    const newName = prompt("新しいカテゴリー名を入力してください:", oldName);
+
+    if (newName && newName.trim() !== "" && newName !== oldName) {
+        const name = newName.trim().substring(0, 20);
+
+        // データの移行
+        links[name] = links[oldName];
+        delete links[oldName];
+
+        // レイアウトの引き継ぎ
+        const oldKey = `orbitTab_layout_cat_${oldName}`;
+        const newKey = `orbitTab_layout_cat_${name}`;
+        const layoutData = localStorage.getItem(oldKey);
+        if (layoutData) {
+            localStorage.setItem(newKey, layoutData);
+            localStorage.removeItem(oldKey);
+        }
+
+        saveAndRender(); 
+        console.log(`名前を「${oldName}」から「${name}」に変更しました。`);
+    }
+}, true); // ★true（キャプチャリング）にすることで優先的にイベントを捕まえる
+
+// ==========================================
+// 6. ボタンイベント & 起動
 // ==========================================
 document.getElementById('add-cat-btn').onclick = () => {
     const n = prompt("新しいカテゴリー名:");
