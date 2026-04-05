@@ -15,7 +15,7 @@ const DEFAULT_LINKS = {
     ]
 };
 
-const WELCOME_MSG = "🚀 OrbitTab へようこそ！\n\nここはあなた専用のデジタル管制塔です。\n\n・全ての窓は、上のグレー部分を掴んで移動、右下でサイズ変更できます。";
+const WELCOME_MSG = "🚀 OrbitTab へようこそ！\n\n・全ての窓は、上のグレー部分を掴んで移動、右下でサイズ変更できます。";
 const DEFAULT_BG_STYLE = "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)";
 
 const INITIAL_LAYOUT = {
@@ -86,7 +86,7 @@ async function loadBackground() {
 }
 
 // ==========================================
-// 3. ウィジェット化コア関数（競合防止強化版）
+// 3. ウィジェット化コア関数（ドラッグ・リサイズ）
 // ==========================================
 function makeWidget(el, storageKey, defaultLayout) {
     if (!el) return;
@@ -103,32 +103,30 @@ function makeWidget(el, storageKey, defaultLayout) {
         const resizer = document.createElement('div');
         resizer.className = 'resizer';
         el.appendChild(resizer);
-        resizer.onmousedown = (e) => {
-            if (e.button !== 0) return; // 左クリックのみ
+        resizer.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
             isResizing = true;
             startX = e.clientX; startY = e.clientY;
             startW = el.offsetWidth; startH = el.offsetHeight;
             e.stopPropagation();
             bringToFront(el);
             document.body.style.userSelect = 'none';
-        };
+        });
     }
 
     const header = el.querySelector('.widget-header');
-    el.onmousedown = () => bringToFront(el);
+    el.addEventListener('mousedown', () => bringToFront(el));
     if (header) {
-        header.onmousedown = (e) => {
-            // ★重要：右クリック(ボタン2)は移動処理を即座に終了させる
-            if (e.button === 2) return; 
-            if (e.button !== 0) return;
+        header.addEventListener('mousedown', (e) => {
+            // 右クリックやControlクリック時はドラッグを開始しない
+            if (e.button !== 0 || e.ctrlKey) return;
             if (e.target.classList.contains('cat-delete-btn')) return;
-            
             isDragging = true;
             startX = e.clientX; startY = e.clientY;
             startLeft = el.offsetLeft; startTop = el.offsetTop;
             bringToFront(el);
             document.body.style.userSelect = 'none';
-        };
+        });
     }
 
     window.addEventListener('mousemove', (e) => {
@@ -182,36 +180,27 @@ function renderBoard() {
     Object.keys(links).forEach((cat, index) => {
         const box = document.createElement('div');
         box.className = 'widget category-box';
+        // style で user-select: none を追加してテキスト選択を防止
         box.innerHTML = `
-            <div class="widget-header">
+            <div class="widget-header" style="user-select: none; -webkit-user-select: none;">
                 <h3 class="widget-title" style="color:#00d2ff; pointer-events: none;">${cat}</h3>
                 <span class="cat-delete-btn">🗑️</span>
             </div>
             <div class="link-list"></div>
         `;
 
-        // 🗑️ 削除ボタン
-        box.querySelector('.cat-delete-btn').onclick = (e) => {
-            e.stopPropagation();
-            if (confirm(`カテゴリー「${cat}」を削除しますか？`)) {
-                delete links[cat];
-                saveAndRender();
-            }
-        };
-
-        // ★右クリックによる名前変更（要素に直接追加）
         const header = box.querySelector('.widget-header');
-        header.oncontextmenu = (e) => {
+
+        // ★ 名前変更のアクション（共通化）
+        const renameAction = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log("名前変更モード起動:", cat);
-
             const newName = prompt("新しいカテゴリー名を入力してください:", cat);
             if (newName && newName.trim() !== "" && newName !== cat) {
                 const name = newName.trim().substring(0, 20);
                 links[name] = links[cat];
                 delete links[cat];
-
+                // レイアウトも引き継ぎ
                 const oldKey = `orbitTab_layout_cat_${cat}`;
                 const newKey = `orbitTab_layout_cat_${name}`;
                 const layout = localStorage.getItem(oldKey);
@@ -223,7 +212,21 @@ function renderBoard() {
             }
         };
 
-        // リンクドロップ処理
+        // 右クリックで変更
+        header.addEventListener('contextmenu', renameAction);
+        // ★ダブルクリックでも変更（Macトラックパッド対策の決定版）
+        header.addEventListener('dblclick', renameAction);
+
+        // 削除ボタン
+        box.querySelector('.cat-delete-btn').onclick = (e) => {
+            e.stopPropagation();
+            if (confirm(`カテゴリー「${cat}」を削除しますか？`)) {
+                delete links[cat];
+                saveAndRender();
+            }
+        };
+
+        // リンク追加処理
         box.ondragover = e => e.preventDefault();
         box.ondrop = e => {
             e.preventDefault();
@@ -331,7 +334,6 @@ bgInput.onchange = e => {
 };
 
 window.addEventListener('DOMContentLoaded', () => {
-    console.log("OrbitTab 起動");
     loadBackground();
     renderBoard();
 });
