@@ -86,7 +86,7 @@ async function loadBackground() {
 }
 
 // ==========================================
-// 3. ウィジェット化コア関数（ドラッグ・リサイズ）
+// 3. ウィジェット化コア関数（競合を完全に排除）
 // ==========================================
 function makeWidget(el, storageKey, defaultLayout) {
     if (!el) return;
@@ -99,34 +99,39 @@ function makeWidget(el, storageKey, defaultLayout) {
     el.style.width = saved.w + 'px';
     el.style.height = saved.h + 'px';
 
+    // リサイズ処理
+    const resizer = el.querySelector('.resizer') || document.createElement('div');
     if (!el.querySelector('.resizer')) {
-        const resizer = document.createElement('div');
         resizer.className = 'resizer';
         el.appendChild(resizer);
-        resizer.addEventListener('mousedown', (e) => {
-            if (e.button !== 0) return;
-            isResizing = true;
-            startX = e.clientX; startY = e.clientY;
-            startW = el.offsetWidth; startH = el.offsetHeight;
-            e.stopPropagation();
-            bringToFront(el);
-            document.body.style.userSelect = 'none';
-        });
     }
+    
+    resizer.onmousedown = (e) => {
+        if (e.button !== 0) return; // 左クリックのみ
+        isResizing = true;
+        startX = e.clientX; startY = e.clientY;
+        startW = el.offsetWidth; startH = el.offsetHeight;
+        e.stopPropagation();
+        bringToFront(el);
+        document.body.style.userSelect = 'none';
+    };
 
     const header = el.querySelector('.widget-header');
-    el.addEventListener('mousedown', () => bringToFront(el));
+    el.onmousedown = () => bringToFront(el);
+    
     if (header) {
-        header.addEventListener('mousedown', (e) => {
-            // 右クリックやControlクリック時はドラッグを開始しない
-            if (e.button !== 0 || e.ctrlKey) return;
+        header.onmousedown = (e) => {
+            // ★超重要：左クリック(0)かつControlなしの時だけドラッグを開始
+            // 右クリック(2)やControl+クリックは、名前変更のためにスルーさせる
+            if (e.button !== 0 || e.ctrlKey) return; 
             if (e.target.classList.contains('cat-delete-btn')) return;
+            
             isDragging = true;
             startX = e.clientX; startY = e.clientY;
             startLeft = el.offsetLeft; startTop = el.offsetTop;
             bringToFront(el);
             document.body.style.userSelect = 'none';
-        });
+        };
     }
 
     window.addEventListener('mousemove', (e) => {
@@ -175,12 +180,12 @@ function renderBoard() {
     const container = document.getElementById('widgets-container');
     if (!container) return;
 
+    // 一旦クリア
     container.querySelectorAll('.category-box').forEach(w => w.remove());
 
     Object.keys(links).forEach((cat, index) => {
         const box = document.createElement('div');
         box.className = 'widget category-box';
-        // style で user-select: none を追加してテキスト選択を防止
         box.innerHTML = `
             <div class="widget-header" style="user-select: none; -webkit-user-select: none;">
                 <h3 class="widget-title" style="color:#00d2ff; pointer-events: none;">${cat}</h3>
@@ -191,33 +196,37 @@ function renderBoard() {
 
         const header = box.querySelector('.widget-header');
 
-        // ★ 名前変更のアクション（共通化）
-        const renameAction = (e) => {
+        // ★ 名前変更のメイン関数
+        const renameHandler = (e) => {
             e.preventDefault();
             e.stopPropagation();
+            
             const newName = prompt("新しいカテゴリー名を入力してください:", cat);
             if (newName && newName.trim() !== "" && newName !== cat) {
                 const name = newName.trim().substring(0, 20);
+                
+                // データの移行
                 links[name] = links[cat];
                 delete links[cat];
-                // レイアウトも引き継ぎ
+
+                // レイアウト設定も新しい名前に引き継ぐ
                 const oldKey = `orbitTab_layout_cat_${cat}`;
                 const newKey = `orbitTab_layout_cat_${name}`;
-                const layout = localStorage.getItem(oldKey);
-                if (layout) {
-                    localStorage.setItem(newKey, layout);
+                const oldLayout = localStorage.getItem(oldKey);
+                if (oldLayout) {
+                    localStorage.setItem(newKey, oldLayout);
                     localStorage.removeItem(oldKey);
                 }
+
                 saveAndRender();
             }
         };
 
-        // 右クリックで変更
-        header.addEventListener('contextmenu', renameAction);
-        // ★ダブルクリックでも変更（Macトラックパッド対策の決定版）
-        header.addEventListener('dblclick', renameAction);
+        // 右クリックとダブルクリックの両方に登録
+        header.addEventListener('contextmenu', renameHandler);
+        header.addEventListener('dblclick', renameHandler);
 
-        // 削除ボタン
+        // 🗑️ 削除ボタン
         box.querySelector('.cat-delete-btn').onclick = (e) => {
             e.stopPropagation();
             if (confirm(`カテゴリー「${cat}」を削除しますか？`)) {
@@ -226,7 +235,7 @@ function renderBoard() {
             }
         };
 
-        // リンク追加処理
+        // ドロップ処理
         box.ondragover = e => e.preventDefault();
         box.ondrop = e => {
             e.preventDefault();
