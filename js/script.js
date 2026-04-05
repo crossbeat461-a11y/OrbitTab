@@ -201,25 +201,56 @@ function renderBoard() {
             e.preventDefault();
             e.stopPropagation();
             
-            const newName = prompt("新しいカテゴリー名を入力してください:", cat);
-            if (newName && newName.trim() !== "" && newName !== cat) {
-                const name = newName.trim().substring(0, 20);
-                
-                // データの移行
-                links[name] = links[cat];
-                delete links[cat];
-
-                // レイアウト設定も新しい名前に引き継ぐ
-                const oldKey = `orbitTab_layout_cat_${cat}`;
-                const newKey = `orbitTab_layout_cat_${name}`;
-                const oldLayout = localStorage.getItem(oldKey);
-                if (oldLayout) {
-                    localStorage.setItem(newKey, oldLayout);
-                    localStorage.removeItem(oldKey);
+            const titleEl = header.querySelector('.widget-title');
+            const currentName = cat;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentName;
+            input.style.width = '100%';
+            input.style.border = 'none';
+            input.style.background = 'transparent';
+            input.style.color = '#00d2ff';
+            input.style.fontSize = 'inherit';
+            input.style.fontWeight = 'bold';
+            input.style.outline = 'none';
+            titleEl.replaceWith(input);
+            input.focus();
+            input.select();
+            
+            const save = () => {
+                const newName = input.value.trim();
+                if (newName && newName !== currentName) {
+                    const name = newName.substring(0, 20);
+                    
+                    // データの移行
+                    links[name] = links[cat];
+                    delete links[cat];
+                    
+                    // レイアウト設定も新しい名前に引き継ぐ
+                    const oldKey = `orbitTab_layout_cat_${cat}`;
+                    const newKey = `orbitTab_layout_cat_${name}`;
+                    const oldLayout = localStorage.getItem(oldKey);
+                    if (oldLayout) {
+                        localStorage.setItem(newKey, oldLayout);
+                        localStorage.removeItem(oldKey);
+                    }
+                    
+                    saveAndRender();
+                } else {
+                    titleEl.textContent = currentName;
+                    input.replaceWith(titleEl);
                 }
-
-                saveAndRender();
-            }
+            };
+            
+            input.addEventListener('blur', save);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    save();
+                } else if (e.key === 'Escape') {
+                    titleEl.textContent = currentName;
+                    input.replaceWith(titleEl);
+                }
+            });
         };
 
         // 右クリックとダブルクリックの両方に登録
@@ -259,6 +290,48 @@ function renderBoard() {
             wrap.innerHTML = `<span class="link-title">${item.title}</span><span class="delete-btn">&times;</span>`;
             wrap.querySelector('.link-title').onclick = () => window.open(item.url, '_blank');
             wrap.querySelector('.delete-btn').onclick = () => { links[cat].splice(idx, 1); saveAndRender(); };
+            
+            // リンクタイトルの右クリック編集
+            wrap.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const titleEl = wrap.querySelector('.link-title');
+                const currentTitle = item.title;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentTitle;
+                input.style.width = '100%';
+                input.style.border = 'none';
+                input.style.background = 'transparent';
+                input.style.color = 'inherit';
+                input.style.outline = 'none';
+                titleEl.replaceWith(input);
+                input.focus();
+                input.select();
+                
+                const save = () => {
+                    const newTitle = input.value.trim();
+                    if (newTitle) {
+                        item.title = newTitle;
+                        saveAndRender();
+                    } else {
+                        titleEl.textContent = currentTitle;
+                        input.replaceWith(titleEl);
+                    }
+                };
+                
+                input.addEventListener('blur', save);
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        save();
+                    } else if (e.key === 'Escape') {
+                        titleEl.textContent = currentTitle;
+                        input.replaceWith(titleEl);
+                    }
+                });
+            });
+            
             listDiv.appendChild(wrap);
         });
 
