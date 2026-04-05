@@ -73,12 +73,12 @@ async function loadBackground() {
         const request = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).get("background");
         request.onsuccess = () => {
             if (request.result) {
-                // background 全体ではなく backgroundImage だけを更新し、CSSの cover 設定を維持する
+                // background全体ではなくbackgroundImageのみを更新し、CSSのcover設定を活かす [cite: 6]
                 bg.style.backgroundImage = `url(${request.result})`;
             } else {
                 bg.style.background = DEFAULT_BG_STYLE;
             }
-            // 画像セット後にフェードイン
+            // 画像セット後にフェードイン。 transition はCSS側 [cite: 7]
             setTimeout(() => { bg.style.opacity = 1; }, 50);
         };
     } catch (err) {
@@ -88,7 +88,7 @@ async function loadBackground() {
 }
 
 // ==========================================
-// 3. ウィジェット化コア関数（競合を完全に排除）
+// 3. ウィジェット化コア関数
 // ==========================================
 function makeWidget(el, storageKey, defaultLayout) {
     if (!el) return;
@@ -108,7 +108,7 @@ function makeWidget(el, storageKey, defaultLayout) {
     }
     
     resizer.onmousedown = (e) => {
-        if (e.button !== 0) return; 
+        if (e.button !== 0) return; // 左クリックのみ
         isResizing = true;
         startX = e.clientX; startY = e.clientY;
         startW = el.offsetWidth; startH = el.offsetHeight;
@@ -122,7 +122,7 @@ function makeWidget(el, storageKey, defaultLayout) {
     
     if (header) {
         header.onmousedown = (e) => {
-            // ★超重要：左クリック(0)かつControlなしの時だけドラッグ。右クリック(2)はスルー
+            // ★超重要：左クリックかつControlなしの時だけドラッグ。右クリックは編集用
             if (e.button !== 0 || e.ctrlKey) return; 
             if (e.target.classList.contains('cat-delete-btn')) return;
             
@@ -180,7 +180,7 @@ function renderBoard() {
     const container = document.getElementById('widgets-container');
     if (!container) return;
 
-    // ★重要：NotFoundError対策。contains で存在確認してから安全に削除
+    // ★NotFoundError対策：安全な削除
     const existingBoxes = container.querySelectorAll('.category-box');
     existingBoxes.forEach(w => {
         if (container.contains(w)) {
@@ -201,12 +201,13 @@ function renderBoard() {
 
         const header = box.querySelector('.widget-header');
 
+        // 名前変更 (インライン編集)
         const renameHandler = (e) => {
             e.preventDefault();
             e.stopPropagation();
             
             const titleEl = header.querySelector('.widget-title');
-            if (!titleEl) return; // 既にinputに置き換わっている場合などの二重発火防止
+            if (!titleEl) return;
 
             const currentName = cat;
             const input = document.createElement('input');
@@ -234,7 +235,7 @@ function renderBoard() {
                     }
                     saveAndRender();
                 } else {
-                    renderBoard(); // キャンセル時は再描画で元に戻す
+                    renderBoard();
                 }
             };
             
@@ -388,7 +389,7 @@ bgInput.onchange = e => {
         r.onload = async ev => {
             const data = ev.target.result;
             const bg = document.getElementById('bg-container');
-            // backgroundImage だけをセットし、CSSの cover 設定を活かす
+            // backgroundImage だけをセットし、CSSの cover 設定を維持する [cite: 6]
             bg.style.backgroundImage = `url(${data})`;
             const db = await openDB();
             db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(data, "background");

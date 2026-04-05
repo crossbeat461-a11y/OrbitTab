@@ -27,11 +27,27 @@ html, body {
     width: 100vw;
     height: 100vh;
     z-index: -2; /* 全ての要素より後ろ */
-    background-position: center;
-    background-size: cover;
-    background-repeat: no-repeat;
+    
+    /* ★背景の自動調整（フィット）設定を強化 */
+    background-position: center center !important; /* 中央基準 */
+    background-size: cover !important;           /* 隙間なく画面一杯に */
+    background-repeat: no-repeat !important;      /* 繰り返さない */
+    background-attachment: fixed !important;      /* 固定 */
+
     opacity: 0; /* JSでフェードイン */
     transition: opacity 1s ease;
+}
+
+/* ★追加：背景を少し暗くする効果を背景レイヤーに統合（境界線のラインを消す） */
+#bg-container::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.15); /* 暗さの調整。ここで一括管理 */
+    pointer-events: none; /* 下の要素の操作を邪魔しない */
 }
 
 /* メインインターフェース：全ての要素を乗せる透明な板 */
@@ -40,7 +56,8 @@ html, body {
     width: 100%;
     min-height: 100vh;
     z-index: 1;
-    background: rgba(0, 0, 0, 0.1); /* ほんの少し暗くして文字の視認性を確保 */
+    /* ★背景色を完全に透明化（ムラやラインの原因を排除） */
+    background: transparent !important; 
     padding-bottom: 150px;
 }
 
