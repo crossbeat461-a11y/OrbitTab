@@ -30,7 +30,7 @@ const INITIAL_LAYOUT = {
     ]
 };
 
-let maxZIndex = 10;
+let maxZIndex = 100;
 
 // ==========================================
 // 1. ユーティリティ

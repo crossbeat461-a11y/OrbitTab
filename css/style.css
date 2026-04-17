@@ -24,13 +24,8 @@ html, body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: -2;
-    background-position: center center !important;
-    background-size: cover !important;
-    background-repeat: no-repeat !important;
-    background-attachment: fixed !important;
-    opacity: 0;
-    transition: opacity 1s ease;
+    z-index: -2; /* 以前より後ろに配置 */
+    pointer-events: none; /* ★重要：クリックを無視して下の要素に流す */
 }
 
 #bg-container::after {
@@ -49,8 +44,8 @@ html, body {
     width: 100%;
     min-height: 100vh;
     z-index: 1;
-    background: transparent !important; 
-    padding-bottom: 150px;
+    background: transparent !important;
+    pointer-events: none; /* ★重要：板自体はクリックを貫通させる */
 }
 
 /* ==========================================
@@ -95,6 +90,10 @@ html, body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+}
+/* ウィジェットとボタン：これらはクリックを「受け取る」 */
+.widget, .bottom-controls {
+    pointer-events: auto; /* ★重要：ここだけはクリックできるようにする */
 }
 
 /* ==========================================
