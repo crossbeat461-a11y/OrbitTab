@@ -15,10 +15,9 @@ const DEFAULT_LINKS = {
     ]
 };
 
-// 【修正】付箋の初期値をオブジェクト形式に変更（見出し対応）
 const WELCOME_NOTE = {
     title: "タスク",
-    body: "🚀 OrbitTab へようこそ！\n\n・各窓はグレー部分を掴んで移動、右下でサイズ変更できます。"
+    body: "🚀 OrbitTab へようこそ！\n\n・各窓は上部を掴んで移動、右下でサイズ変更できます。"
 };
 const DEFAULT_BG_STYLE = "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)";
 
@@ -26,7 +25,8 @@ const INITIAL_LAYOUT = {
     calendar: { left: 100, top: 250, w: 500, h: 400 },
     note:     { left: 680, top: 250, w: 500, h: 400 },
     cats: [
-        { left: 100, top: 700, w: 320, h: 300 }
+        { left: 100, top: 700, w: 320, h: 300 },
+        { left: 450, top: 700, w: 320, h: 300 }
     ]
 };
 
@@ -164,7 +164,6 @@ function bringToFront(el) {
 // ==========================================
 let links = getSafeStorage('orbitTab_v1_links', DEFAULT_LINKS);
 let calUrl = localStorage.getItem('orbitTab_calUrl') || "";
-// 【修正】付箋データをオブジェクトとして取得
 let noteData = getSafeStorage('orbitTab_note_v2', WELCOME_NOTE);
 
 function saveAndRender() {
@@ -189,9 +188,28 @@ function renderBoard() {
             </div>
             <div class="link-list"></div>
         `;
-        // ... (リンク集のドラッグ&ドロップ等の処理は既存のまま) ...
-        // 省略していますが、既存のlinks描画ロジックをここに維持してください
-        
+
+        box.querySelector('.cat-delete-btn').onclick = (e) => {
+            e.stopPropagation();
+            if (confirm(`カテゴリー「${cat}」を削除しますか？`)) {
+                delete links[cat];
+                saveAndRender();
+            }
+        };
+
+        const listDiv = box.querySelector('.link-list');
+        links[cat].forEach((item, idx) => {
+            const wrap = document.createElement('div');
+            wrap.className = 'link-wrapper';
+            wrap.innerHTML = `<span class="link-title">${item.title}</span><span class="delete-btn">&times;</span>`;
+            wrap.querySelector('.link-title').onclick = () => window.open(item.url, '_blank');
+            wrap.querySelector('.delete-btn').onclick = () => { 
+                links[cat].splice(idx, 1); 
+                saveAndRender(); 
+            };
+            listDiv.appendChild(wrap);
+        });
+
         container.appendChild(box);
         const layout = INITIAL_LAYOUT.cats[index] || { left: 480, top: 400, w: 320, h: 300 };
         makeWidget(box, `orbitTab_layout_cat_${cat}`, layout);
@@ -204,7 +222,6 @@ function renderSpecialWidgets() {
     const calWidget = document.getElementById('cal-widget');
     const noteWidget = document.getElementById('note-widget');
 
-    // カレンダー表示
     if (calUrl) {
         calWidget.style.display = 'flex';
         calWidget.innerHTML = `
@@ -217,7 +234,6 @@ function renderSpecialWidgets() {
         };
     } else { calWidget.style.display = 'none'; }
 
-    // 【修正】付箋（見出し対応版）の表示
     if (noteData !== null) {
         noteWidget.style.display = 'flex';
         noteWidget.innerHTML = `
@@ -249,6 +265,24 @@ function renderSpecialWidgets() {
 // ==========================================
 // 5. ボタンイベント & 起動
 // ==========================================
+document.getElementById('add-cat-btn').onclick = () => {
+    const n = prompt("新しいカテゴリー名:");
+    if (n && n.trim()) {
+        const name = n.trim().substring(0, 20);
+        if (!links[name]) { links[name] = []; saveAndRender(); }
+    }
+};
+
+document.getElementById('cal-setup-btn').onclick = () => {
+    const u = prompt("Googleカレンダーの埋め込みURL:");
+    if (u) {
+        const match = u.match(/src="([^"]+)"/);
+        calUrl = match ? match[1] : u;
+        localStorage.setItem('orbitTab_calUrl', calUrl);
+        renderBoard();
+    }
+};
+
 document.getElementById('note-setup-btn').onclick = () => {
     if (noteData === null) {
         noteData = { title: "タスク", body: "" };
@@ -256,7 +290,22 @@ document.getElementById('note-setup-btn').onclick = () => {
     }
 };
 
-// ... (他のボタンイベント：add-cat-btn, cal-setup-btn, bg-change-btn は既存のまま) ...
+const bgInput = document.getElementById('bg-input');
+document.getElementById('bg-change-btn').onclick = () => bgInput.click();
+bgInput.onchange = e => {
+    const f = e.target.files[0];
+    if (f) {
+        const r = new FileReader();
+        r.onload = async ev => {
+            const data = ev.target.result;
+            const bg = document.getElementById('bg-container');
+            bg.style.backgroundImage = `url(${data})`;
+            const db = await openDB();
+            db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(data, "background");
+        };
+        r.readAsDataURL(f);
+    }
+};
 
 window.addEventListener('DOMContentLoaded', () => {
     loadBackground();
