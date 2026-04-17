@@ -1,8 +1,6 @@
 // ==========================================
 // 0. 定数と初期データ
 // ==========================================
-const DB_NAME = "OrbitTabDB";
-const STORE_NAME = "settings";
 const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153"; 
 
 const DEFAULT_LINKS = {
@@ -23,7 +21,7 @@ function getSafeStorage(key, defaultValue) {
 }
 
 // ==========================================
-// 1. 時計と背景
+// 1. 時計
 // ==========================================
 function updateClock() {
     const clockEl = document.getElementById('clock');
@@ -35,13 +33,6 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 updateClock();
-
-async function loadBackground() {
-    const bg = document.getElementById('bg-container');
-    if (!bg) return;
-    bg.style.background = "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)";
-    setTimeout(() => { bg.style.opacity = 1; }, 50);
-}
 
 // ==========================================
 // 2. ウィジェット基本（ドラッグ・リサイズ）
@@ -128,7 +119,7 @@ function renderBoard() {
     if (!container) return;
     container.innerHTML = ""; 
 
-    // 1. カテゴリBOXの描画
+    // カテゴリBOXの描画
     Object.keys(links).forEach((cat, index) => {
         const box = document.createElement('div');
         box.className = 'widget category-box';
@@ -140,11 +131,26 @@ function renderBoard() {
             <div class="link-list"></div>
         `;
 
+        // 削除機能
         box.querySelector('.cat-delete-btn').onclick = (e) => {
             e.stopPropagation();
             if (confirm(`カテゴリー「${cat}」を削除しますか？`)) {
                 delete links[cat];
                 saveAndRender();
+            }
+        };
+
+        // ドラッグ＆ドロップでリンク追加
+        box.ondragover = (e) => e.preventDefault();
+        box.ondrop = (e) => {
+            e.preventDefault();
+            const url = e.dataTransfer.getData('text/plain');
+            if (url && url.startsWith('http')) {
+                const title = prompt("リンクの名前:", url);
+                if (title) {
+                    links[cat].push({ title, url });
+                    saveAndRender();
+                }
             }
         };
 
@@ -166,7 +172,12 @@ function renderBoard() {
         makeWidget(box, `orbitTab_cat_${cat.replace(/\s+/g, '_')}`, { left: 100 + (index*340), top: 600, w: 320, h: 250 });
     });
 
-    // 2. 付箋の描画
+    // 付箋・カレンダー描画
+    renderSpecialWidgets(container);
+}
+
+function renderSpecialWidgets(container) {
+    // 付箋
     notes.forEach((data, idx) => {
         const note = document.createElement('div');
         note.className = 'widget note-box';
@@ -176,7 +187,6 @@ function renderBoard() {
                 <span class="cat-delete-btn">🗑️</span>
             </div>
             <textarea class="ni-textarea" placeholder="メモを入力...">${data.body}</textarea>`;
-        
         container.appendChild(note);
         makeWidget(note, `orbitTab_note_${idx}`, { left: 680 + (idx * 40), top: 250 + (idx * 40), w: 300, h: 250 });
 
@@ -188,10 +198,9 @@ function renderBoard() {
             notes[idx] = { title: nt.value, body: ni.value };
             localStorage.setItem('orbitTab_notes_v3', JSON.stringify(notes));
         };
-        nt.oninput = save;
-        ni.oninput = save;
+        nt.oninput = save; ni.oninput = save;
         del.onclick = () => {
-            if (confirm("この付箋を削除しますか？")) {
+            if (confirm("付箋を削除しますか？")) {
                 notes.splice(idx, 1);
                 localStorage.setItem('orbitTab_notes_v3', JSON.stringify(notes));
                 renderBoard();
@@ -199,7 +208,7 @@ function renderBoard() {
         };
     });
 
-    // 3. カレンダー
+    // カレンダー
     if (calUrl) {
         const cal = document.createElement('div');
         cal.className = 'widget';
@@ -207,7 +216,7 @@ function renderBoard() {
         container.appendChild(cal);
         makeWidget(cal, 'orbitTab_cal', { left: 100, top: 200, w: 500, h: 400 });
         document.getElementById('del-cal').onclick = () => {
-            if(confirm("解除しますか？")) { calUrl = ""; localStorage.removeItem('orbitTab_calUrl'); renderBoard(); }
+            calUrl = ""; localStorage.removeItem('orbitTab_calUrl'); renderBoard();
         };
     }
 }
@@ -218,37 +227,31 @@ function renderBoard() {
 document.getElementById('guide-btn').onclick = () => window.open(NOTE_URL, '_blank');
 
 document.getElementById('add-cat-btn').onclick = () => {
-    const n = prompt("新しいカテゴリー名を入力してください:");
+    const n = prompt("カテゴリー名:");
     if (n && n.trim()) {
-        const catName = n.trim();
-        if (!links[catName]) {
-            links[catName] = []; // 新しい空の配列を作成
-            saveAndRender();     // 保存して再描画
-        } else {
-            alert("その名前のカテゴリーは既に存在します。");
+        if (!links[n]) {
+            links[n] = [];
+            saveAndRender();
         }
     }
 };
 
 document.getElementById('cal-setup-btn').onclick = () => {
-    const u = prompt("Googleカレンダーの埋め込みURL（srcの中身）を入力してください:");
-    if (u) {
-        calUrl = u;
-        localStorage.setItem('orbitTab_calUrl', u);
-        renderBoard();
-    }
+    const u = prompt("カレンダーURL:");
+    if (u) { calUrl = u; localStorage.setItem('orbitTab_calUrl', u); renderBoard(); }
 };
 
 document.getElementById('note-setup-btn').onclick = () => {
-    if (notes.length >= 4) {
-        alert("付箋は最大4つまでです。");
-        return;
-    }
-    notes.push({ title: "タスク " + (notes.length + 1), body: "" });
+    if (notes.length >= 4) return alert("最大4つまでです");
+    notes.push({ title: "タスク", body: "" });
     localStorage.setItem('orbitTab_notes_v3', JSON.stringify(notes));
     renderBoard();
 };
 
 document.getElementById('bg-change-btn').onclick = () => document.getElementById('bg-input').click();
 
-window.onload = () => { loadBackground(); renderBoard(); };
+// 起動
+window.onload = () => {
+    document.getElementById('bg-container').style.opacity = 1;
+    renderBoard();
+};
