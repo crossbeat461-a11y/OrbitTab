@@ -1,226 +1,35 @@
-/* ==========================================
-   0. 基本設定 & リセット
-   ========================================== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #000; color: #fff; font-family: sans-serif; overflow: hidden; width: 100vw; height: 100vh; }
+#bg-container { position: fixed; width: 100%; height: 100%; z-index: -1; opacity: 0; transition: 1s; }
 
-html, body {
-    width: 100%;
-    min-height: 100vh;
-    margin: 0;
-    background: transparent; 
-    overflow-x: hidden;
-    overflow-y: auto;
-    color: #ffffff;
-    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
-}
+.main-interface { position: relative; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+#widgets-container, .bottom-controls { pointer-events: auto; }
 
-#bg-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: -2; /* 以前より後ろに配置 */
-    pointer-events: none; /* ★重要：クリックを無視して下の要素に流す */
-}
+/* 時計 */
+.info-unit { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; }
+#clock { font-size: 80px; font-weight: 100; }
 
-#bg-container::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.15);
-    pointer-events: none;
-}
+/* ウィジェット */
+.widget { position: absolute; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+.widget-header { padding: 10px; background: rgba(0,0,0,0.3); display: flex; justify-content: space-between; align-items: center; cursor: move; }
+.widget-title { font-size: 12px; font-weight: bold; color: #00d2ff; }
 
-.main-interface {
-    position: relative;
-    width: 100%;
-    min-height: 100vh;
-    z-index: 1;
-    background: transparent !important;
-    pointer-events: none; /* ★重要：板自体はクリックを貫通させる */
-}
+/* リンク */
+.link-list { flex: 1; padding: 10px; overflow-y: auto; }
+.link-wrapper { display: flex; justify-content: space-between; padding: 5px; border-radius: 4px; cursor: pointer; }
+.link-wrapper:hover { background: rgba(255,255,255,0.1); }
+.delete-btn, .cat-delete-btn { cursor: pointer; opacity: 0.5; font-size: 14px; }
+.delete-btn:hover, .cat-delete-btn:hover { opacity: 1; color: #ff4b2b; }
 
-/* ==========================================
-   1. 固定要素（時計）
-   ========================================== */
-/* 審査対策：検索ユニット(search-unit)に関連するCSSは削除しました */
+/* カレンダー & 付箋 */
+.calendar-iframe { border: none; flex: 1; filter: invert(0.9) hue-rotate(180deg); }
+#nt { background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.2); color: #fff; font-weight: bold; outline: none; flex: 1; margin-right: 10px; }
+#ni { background: transparent; border: none; color: #fff; flex: 1; padding: 10px; resize: none; outline: none; }
 
-.info-unit {
-    position: absolute;
-    top: 15vh; /* 検索窓がなくなったので少し位置を調整 */
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    z-index: 2;
-    text-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-}
+/* 操作ボタン */
+.bottom-controls { position: fixed; bottom: 30px; right: 30px; display: flex; gap: 10px; }
+.control-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: #fff; cursor: pointer; font-size: 18px; transition: 0.3s; }
+.control-btn:hover { background: rgba(255,255,255,0.4); transform: translateY(-3px); }
 
-#clock {
-    font-size: 100px;
-    font-weight: 100;
-    letter-spacing: -2px;
-    line-height: 1;
-}
-
-#date {
-    font-size: 18px;
-    font-weight: 300;
-    margin-top: 10px;
-    opacity: 0.8;
-}
-
-/* ==========================================
-   2. ウィジェット共通
-   ========================================== */
-.widget {
-    position: absolute;
-    background: rgba(255, 255, 255, 0.08); 
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 15px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-/* ウィジェットとボタン：これらはクリックを「受け取る」 */
-.widget, .bottom-controls {
-    pointer-events: auto; /* ★重要：ここだけはクリックできるようにする */
-}
-
-/* ==========================================
-   3. 付箋ウィジェット（見出し対応版）
-   ========================================== */
-.note-box {
-    background: rgba(255, 255, 255, 0.12); /* 他のウィジェットより少しだけ明るく */
-    padding: 15px;
-    min-width: 250px;
-}
-
-/* 見出し入力欄 */
-#note-title {
-    width: 100%;
-    border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    background: transparent;
-    font-weight: bold;
-    font-size: 1.2rem;
-    padding-bottom: 8px;
-    margin-bottom: 10px;
-    outline: none;
-    color: #fff; /* 背景が透過なので白に */
-}
-
-#note-title::placeholder {
-    color: rgba(255, 255, 255, 0.4);
-}
-
-/* 本文エリア */
-#note-content {
-    width: 100%;
-    height: 180px;
-    border: none;
-    background: transparent;
-    resize: none;
-    outline: none;
-    font-size: 0.95rem;
-    line-height: 1.6;
-    color: rgba(255, 255, 255, 0.9);
-}
-
-/* ==========================================
-   4. カレンダー
-   ========================================== */
-.calendar-iframe {
-    width: 100%;
-    flex: 1;
-    border: none;
-    filter: invert(0.9) hue-rotate(180deg);
-}
-
-/* ==========================================
-   5. 操作ボタン & 吹き出し（右下固定）
-   ========================================== */
-.bottom-controls {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    display: flex;
-    gap: 12px;
-    z-index: 9999;
-}
-
-.control-btn {
-    position: relative; /* 吹き出しの基準 */
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    transition: all 0.3s ease;
-}
-
-.control-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-3px);
-}
-
-/* 吹き出しの本体 */
-.control-btn::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: 130%; 
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.85);
-    color: #fff;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.2s ease;
-    pointer-events: none;
-}
-
-.control-btn:hover::after {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* 吹き出しの三角（しっぽ） */
-.control-btn::before {
-    content: "";
-    position: absolute;
-    bottom: 115%;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 6px;
-    border-style: solid;
-    border-color: rgba(0, 0, 0, 0.85) transparent transparent transparent;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.2s ease;
-}
-
-.control-btn:hover::before {
-    opacity: 1;
-    visibility: visible;
-}
+/* リサイズ */
+.resizer { width: 15px; height: 15px; position: absolute; right: 0; bottom: 0; cursor: nwse-resize; }
