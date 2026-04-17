@@ -1,35 +1,164 @@
+/* ==========================================
+   リセット & ベース
+   ========================================== */
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #000; color: #fff; font-family: sans-serif; overflow: hidden; width: 100vw; height: 100vh; }
-#bg-container { position: fixed; width: 100%; height: 100%; z-index: -1; opacity: 0; transition: 1s; }
+body { 
+    background: #000; 
+    color: #fff; 
+    font-family: 'Helvetica Neue', Arial, sans-serif; 
+    overflow: hidden; 
+    width: 100vw; 
+    height: 100vh; 
+}
 
-.main-interface { position: relative; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
-#widgets-container, .bottom-controls { pointer-events: auto; }
+#bg-container { 
+    position: fixed; 
+    width: 100%; 
+    height: 100%; 
+    z-index: -1; 
+    opacity: 0; 
+    transition: 1s ease; 
+}
 
-/* 時計 */
-.info-unit { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; }
-#clock { font-size: 80px; font-weight: 100; }
+.main-interface { 
+    position: relative; 
+    width: 100%; 
+    height: 100%; 
+    z-index: 1; 
+    pointer-events: none; 
+}
 
-/* ウィジェット */
-.widget { position: absolute; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
-.widget-header { padding: 10px; background: rgba(0,0,0,0.3); display: flex; justify-content: space-between; align-items: center; cursor: move; }
-.widget-title { font-size: 12px; font-weight: bold; color: #00d2ff; }
+#widgets-container, .bottom-controls { 
+    pointer-events: auto; 
+}
 
-/* リンク */
-.link-list { flex: 1; padding: 10px; overflow-y: auto; }
-.link-wrapper { display: flex; justify-content: space-between; padding: 5px; border-radius: 4px; cursor: pointer; }
+/* ==========================================
+   固定表示要素
+   ========================================== */
+.info-unit { 
+    position: absolute; 
+    top: 8%; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    text-align: center; 
+    pointer-events: none; 
+    text-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+#clock { font-size: 100px; font-weight: 100; letter-spacing: -2px; }
+#date { font-size: 18px; opacity: 0.7; margin-top: 5px; }
+
+/* ==========================================
+   ウィジェット共通
+   ========================================== */
+.widget { 
+    position: absolute; 
+    background: rgba(255,255,255,0.08); 
+    backdrop-filter: blur(15px); 
+    border: 1px solid rgba(255,255,255,0.15); 
+    border-radius: 14px; 
+    display: flex; 
+    flex-direction: column; 
+    overflow: hidden; 
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4); 
+}
+
+.widget-header { 
+    padding: 12px 15px; 
+    background: rgba(0,0,0,0.25); 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    cursor: move; 
+}
+
+.widget-title { 
+    font-size: 11px; 
+    font-weight: bold; 
+    color: #00d2ff; 
+    text-transform: uppercase; 
+    letter-spacing: 1px;
+}
+
+/* ==========================================
+   各ウィジェット詳細
+   ========================================== */
+.link-list { flex: 1; padding: 12px; overflow-y: auto; }
+.link-wrapper { 
+    display: flex; 
+    justify-content: space-between; 
+    padding: 8px; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    transition: 0.2s;
+}
 .link-wrapper:hover { background: rgba(255,255,255,0.1); }
-.delete-btn, .cat-delete-btn { cursor: pointer; opacity: 0.5; font-size: 14px; }
+.link-title { font-size: 13px; }
+
+.delete-btn, .cat-delete-btn { 
+    cursor: pointer; 
+    opacity: 0.4; 
+    transition: 0.2s; 
+}
 .delete-btn:hover, .cat-delete-btn:hover { opacity: 1; color: #ff4b2b; }
 
-/* カレンダー & 付箋 */
 .calendar-iframe { border: none; flex: 1; filter: invert(0.9) hue-rotate(180deg); }
-#nt { background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.2); color: #fff; font-weight: bold; outline: none; flex: 1; margin-right: 10px; }
-#ni { background: transparent; border: none; color: #fff; flex: 1; padding: 10px; resize: none; outline: none; }
 
-/* 操作ボタン */
-.bottom-controls { position: fixed; bottom: 30px; right: 30px; display: flex; gap: 10px; }
-.control-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: #fff; cursor: pointer; font-size: 18px; transition: 0.3s; }
-.control-btn:hover { background: rgba(255,255,255,0.4); transform: translateY(-3px); }
+/* 付箋スタイル */
+.nt-input { 
+    background: transparent; 
+    border: none; 
+    border-bottom: 1px solid rgba(255,255,255,0.1); 
+    color: #fff; 
+    font-weight: bold; 
+    outline: none; 
+    flex: 1; 
+    margin-right: 15px; 
+    font-size: 14px;
+}
+.ni-textarea { 
+    background: transparent; 
+    border: none; 
+    color: rgba(255,255,255,0.9); 
+    flex: 1; 
+    padding: 15px; 
+    resize: none; 
+    outline: none; 
+    font-size: 14px; 
+    line-height: 1.6;
+}
 
-/* リサイズ */
-.resizer { width: 15px; height: 15px; position: absolute; right: 0; bottom: 0; cursor: nwse-resize; }
+/* ==========================================
+   操作ボタン & 吹き出し
+   ========================================== */
+.bottom-controls { position: fixed; bottom: 30px; right: 30px; display: flex; gap: 12px; }
+.control-btn { 
+    position: relative;
+    width: 48px; height: 48px; 
+    border-radius: 50%; 
+    border: 1px solid rgba(255,255,255,0.1); 
+    background: rgba(255,255,255,0.1); 
+    color: #fff; 
+    cursor: pointer; 
+    font-size: 20px; 
+    display: flex; align-items: center; justify-content: center;
+    transition: 0.3s; 
+    backdrop-filter: blur(10px);
+}
+.control-btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-3px); }
+
+/* 吹き出し */
+.control-btn::after {
+    content: attr(data-tooltip);
+    position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.85); color: #fff; padding: 5px 10px; border-radius: 6px;
+    font-size: 11px; white-space: nowrap; opacity: 0; visibility: hidden; transition: 0.3s;
+}
+.control-btn:hover::after { opacity: 1; visibility: visible; }
+
+/* リサイズつまみ */
+.resizer { 
+    width: 18px; height: 18px; 
+    position: absolute; right: 0; bottom: 0; 
+    cursor: nwse-resize; 
+    background: linear-gradient(135deg, transparent 50%, rgba(255,255,255,0.2) 50%);
+}
