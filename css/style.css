@@ -7,38 +7,32 @@
     box-sizing: border-box;
 }
 
-/* ページ全体を透明化（背景画像を見せるため） */
 html, body {
     width: 100%;
     min-height: 100vh;
     margin: 0;
-    background: transparent; /* 背景色は指定しない */
+    background: transparent; 
     overflow-x: hidden;
     overflow-y: auto;
     color: #ffffff;
     font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
 }
 
-/* 背景画像コンテナ：常に最背面で全画面固定 */
 #bg-container {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: -2; /* 全ての要素より後ろ */
-    
-    /* ★背景の自動調整（フィット）設定を強化 */
-    background-position: center center !important; /* 中央基準 */
-    background-size: cover !important;           /* 隙間なく画面一杯に */
-    background-repeat: no-repeat !important;      /* 繰り返さない */
-    background-attachment: fixed !important;      /* 固定 */
-
-    opacity: 0; /* JSでフェードイン */
+    z-index: -2;
+    background-position: center center !important;
+    background-size: cover !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+    opacity: 0;
     transition: opacity 1s ease;
 }
 
-/* ★追加：背景を少し暗くする効果を背景レイヤーに統合（境界線のラインを消す） */
 #bg-container::after {
     content: "";
     position: absolute;
@@ -46,27 +40,27 @@ html, body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.15); /* 暗さの調整。ここで一括管理 */
-    pointer-events: none; /* 下の要素の操作を邪魔しない */
+    background: rgba(0, 0, 0, 0.15);
+    pointer-events: none;
 }
 
-/* メインインターフェース：全ての要素を乗せる透明な板 */
 .main-interface {
     position: relative;
     width: 100%;
     min-height: 100vh;
     z-index: 1;
-    /* ★背景色を完全に透明化（ムラやラインの原因を排除） */
     background: transparent !important; 
     padding-bottom: 150px;
 }
 
 /* ==========================================
-   1. 固定要素（時計・検索）
+   1. 固定要素（時計）
    ========================================== */
+/* 審査対策：検索ユニット(search-unit)に関連するCSSは削除しました */
+
 .info-unit {
     position: absolute;
-    top: 5vh;
+    top: 15vh; /* 検索窓がなくなったので少し位置を調整 */
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
@@ -88,45 +82,12 @@ html, body {
     opacity: 0.8;
 }
 
-.search-unit {
-    position: absolute;
-    top: calc(5vh + 160px);
-    left: 50%;
-    transform: translateX(-50%);
-    width: 480px;
-    z-index: 2;
-}
-
-.search-bar {
-    display: flex;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 30px;
-    padding: 10px 20px;
-}
-
-.search-bar input {
-    background: transparent;
-    border: none;
-    color: white;
-    font-size: 15px;
-    width: 100%;
-    margin-left: 10px;
-    outline: none;
-}
-
-.search-bar input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-}
-
 /* ==========================================
-   2. ウィジェット共通（グラスモーフィズム）
+   2. ウィジェット共通
    ========================================== */
 .widget {
-    position: absolute; /* 自由配置 */
-    background: rgba(255, 255, 255, 0.08); /* ガラスの質感 */
+    position: absolute;
+    background: rgba(255, 255, 255, 0.08); 
     backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 15px;
@@ -136,84 +97,49 @@ html, body {
     overflow: hidden;
 }
 
-.widget.active {
-    border-color: rgba(255, 255, 255, 0.3);
-    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+/* ==========================================
+   3. 付箋ウィジェット（見出し対応版）
+   ========================================== */
+.note-box {
+    background: rgba(255, 255, 255, 0.12); /* 他のウィジェットより少しだけ明るく */
+    padding: 15px;
+    min-width: 250px;
 }
 
-.widget-header {
-    padding: 12px 15px;
-    background: rgba(0, 0, 0, 0.2);
-    cursor: move;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.widget-title {
-    font-size: 11px;
+/* 見出し入力欄 */
+#note-title {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    background: transparent;
     font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    opacity: 0.6;
+    font-size: 1.2rem;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+    outline: none;
+    color: #fff; /* 背景が透過なので白に */
 }
 
-/* リサイズ用のつまみ */
-.resizer {
-    width: 20px;
-    height: 20px;
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    cursor: nwse-resize;
-    z-index: 10;
+#note-title::placeholder {
+    color: rgba(255, 255, 255, 0.4);
 }
 
-.resizer::after {
-    content: "";
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 0 0 10px 10px;
-    border-color: transparent transparent rgba(255, 255, 255, 0.2) transparent;
-    position: absolute;
-    right: 3px;
-    bottom: 3px;
+/* 本文エリア */
+#note-content {
+    width: 100%;
+    height: 180px;
+    border: none;
+    background: transparent;
+    resize: none;
+    outline: none;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 /* ==========================================
-   3. 各ウィジェットの詳細パーツ
+   4. カレンダー
    ========================================== */
-
-/* リンク集 */
-.link-list {
-    flex: 1;
-    padding: 10px;
-    overflow-y: auto;
-}
-
-.link-wrapper {
-    display: flex;
-    align-items: center;
-    padding: 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.link-wrapper:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.link-title {
-    font-size: 13px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* カレンダー */
 .calendar-iframe {
     width: 100%;
     flex: 1;
@@ -221,34 +147,8 @@ html, body {
     filter: invert(0.9) hue-rotate(180deg);
 }
 
-/* 付箋 */
-.note-textarea {
-    width: 100%;
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: white;
-    padding: 15px;
-    font-size: 13px;
-    line-height: 1.6;
-    outline: none;
-    resize: none;
-}
-
-/* 削除ボタン */
-.delete-btn, .cat-delete-btn {
-    opacity: 0.3;
-    cursor: pointer;
-    transition: opacity 0.2s;
-}
-
-.delete-btn:hover, .cat-delete-btn:hover {
-    opacity: 1;
-    color: #ff4b2b;
-}
-
 /* ==========================================
-   4. 操作ボタン（右下固定）
+   5. 操作ボタン & 吹き出し（右下固定）
    ========================================== */
 .bottom-controls {
     position: fixed;
@@ -260,6 +160,7 @@ html, body {
 }
 
 .control-btn {
+    position: relative; /* 吹き出しの基準 */
     width: 48px;
     height: 48px;
     border-radius: 50%;
@@ -280,49 +181,44 @@ html, body {
     background: rgba(255, 255, 255, 0.2);
     transform: translateY(-3px);
 }
-/* ボタンの親要素を基準にする設定 */
-.control-btn {
-    position: relative; /* 吹き出しの位置基準になります */
-}
 
-/* 吹き出しの見た目 */
+/* 吹き出しの本体 */
 .control-btn::after {
-    content: attr(data-tooltip); /* HTMLのdata-tooltipの文字を表示 */
+    content: attr(data-tooltip);
     position: absolute;
-    bottom: 125%; /* ボタンの上に配置 */
+    bottom: 130%; 
     left: 50%;
     transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.8); /* 黒っぽい半透明 */
+    background-color: rgba(0, 0, 0, 0.85);
     color: #fff;
-    padding: 5px 10px;
+    padding: 6px 12px;
     border-radius: 6px;
     font-size: 12px;
-    white-space: nowrap; /* 改行しない */
-    opacity: 0; /* 最初は隠す */
+    white-space: nowrap;
+    opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s; /* ふわっと出す */
-    pointer-events: none; /* 吹き出し自体はクリックできないようにする */
+    transition: all 0.2s ease;
+    pointer-events: none;
 }
 
-/* ホバーした時に表示 */
 .control-btn:hover::after {
     opacity: 1;
     visibility: visible;
 }
 
-/* 小さな三角形（吹き出しのしっぽ） */
+/* 吹き出しの三角（しっぽ） */
 .control-btn::before {
     content: "";
     position: absolute;
-    bottom: 110%;
+    bottom: 115%;
     left: 50%;
     transform: translateX(-50%);
-    border-width: 5px;
+    border-width: 6px;
     border-style: solid;
-    border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+    border-color: rgba(0, 0, 0, 0.85) transparent transparent transparent;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s;
+    transition: all 0.2s ease;
 }
 
 .control-btn:hover::before {
