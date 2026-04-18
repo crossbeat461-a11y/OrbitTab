@@ -243,7 +243,7 @@ function render() {
 // --- 5. ボタンアクション (下部コントロール) ---
 document.getElementById('add-cat-btn').onclick = () => {
     const catalogKeys = Object.keys(bookmarkCatalog);
-    let msg = "追加方法を選択してください：\n[0] 空のカテゴリを作成\n";
+    let msg = "追加方法を選択してください：\n[0] 空のカテゴリを作成（新規作成は0を入力）\n";
     catalogKeys.forEach((name, i) => {
         msg += `[${i + 1}] ${name}\n`;
     });
