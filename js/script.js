@@ -241,6 +241,7 @@ function render() {
 }
 
 // --- 5. ボタンアクション ---
+// カテゴリ追加ボタン
 document.getElementById('add-cat-btn').onclick = () => {
     const catalogKeys = Object.keys(bookmarkCatalog);
     let msg = "追加方法を選択してください：\n[0] 空のカテゴリ作成 (空のカテゴリを作成する場合「0」を入力してください)\n";
@@ -260,6 +261,24 @@ document.getElementById('add-cat-btn').onclick = () => {
     }
 };
 
+// ガイドボタン (noteを開く)
+document.getElementById('guide-btn').onclick = () => window.open(NOTE_URL, '_blank');
+
+// 【修正箇所】カレンダーボタン (Googleカレンダーを開く)
+document.getElementById('cal-setup-btn').onclick = () => window.open('https://calendar.google.com/', '_blank');
+
+// 付箋追加ボタン
+document.getElementById('note-setup-btn').onclick = () => {
+    notes.push({title: "新規付箋", body: ""}); saveNotes(); render();
+};
+
+// 初期化処理
+window.onload = function() { 
+    updateClock(); setInterval(updateClock, 1000);
+    render(); setupImportFeature(); 
+    const savedBg = localStorage.getItem('orbitTab_bg_v4');
+    if (savedBg) document.getElementById('bg-container').style.backgroundImage = `url(${savedBg})`;
+};
 document.getElementById('guide-btn').onclick = () => window.open(NOTE_URL, '_blank');
 document.getElementById('note-setup-btn').onclick = () => {
     notes.push({title: "新規付箋", body: ""}); saveNotes(); render();
