@@ -35,7 +35,8 @@ function makeWidget(el, key, def) {
 
     const header = el.querySelector('.widget-header');
     header.onmousedown = function(e) {
-        if (e.target.tagName === 'INPUT' || e.target.classList.contains('cat-btn')) return;
+        // ボタン類をクリックした時はドラッグを開始しない
+        if (e.target.closest('.cat-btn') || e.target.tagName === 'INPUT') return;
         maxZ++; el.style.zIndex = maxZ;
         let startX = e.clientX - el.offsetLeft;
         let startY = e.clientY - el.offsetTop;
@@ -110,33 +111,42 @@ function render() {
     if (!container) return;
     container.innerHTML = "";
 
+    // --- カテゴリBOXの描画 ---
     Object.keys(links).forEach((cat, i) => {
         const box = document.createElement('div');
         box.className = 'widget';
-        // ヘッダーに「＋」ボタンを追加
         box.innerHTML = `
             <div class="widget-header">
                 <span class="widget-title">${cat}</span>
                 <div class="header-btns">
-                    <span class="cat-btn add-single-btn" title="リンクを手動追加">➕</span>
-                    <span class="cat-btn cat-delete-btn" title="カテゴリ削除">🗑️</span>
+                    <span class="cat-btn add-single-btn" title="手動追加">➕</span>
+                    <span class="cat-btn cat-delete-btn" title="削除">🗑️</span>
                 </div>
             </div>
             <div class="link-list"></div>`;
         
-        // 手動追加ボタンの処理
+        // 手動追加のロジック（ここを強化しました）
         box.querySelector('.add-single-btn').onclick = (e) => {
             e.stopPropagation();
-            const t = prompt("リンクの名前を入力:");
+            const t = prompt("リンクの名前を入力:", "新しいサイト");
             if(!t) return;
             const u = prompt("URLを入力:", "https://");
-            if(!u || !u.startsWith('http')) { alert("有効なURLを入力してください。"); return; }
+            if(!u || !u.startsWith('http')) { 
+                alert("有効なURLを入力してください（httpから始まるもの）。"); 
+                return; 
+            }
+            
+            // 安全策：配列が存在しない場合は作成する
+            if (!Array.isArray(links[cat])) {
+                links[cat] = [];
+            }
+            
             links[cat].push({ title: t, url: u });
             saveLinks();
             render();
         };
 
-        // ドラッグ＆ドロップ処理
+        // ドラッグ＆ドロップ
         box.ondragover = (e) => { e.preventDefault(); box.style.borderColor = "#00d2ff"; };
         box.ondragleave = () => { box.style.borderColor = "rgba(255, 255, 255, 0.2)"; };
         box.ondrop = (e) => {
@@ -146,7 +156,7 @@ function render() {
             if (url && url.startsWith('http')) {
                 const newTitle = prompt("新しいリンクの名前:", "新しいリンク");
                 if (newTitle) {
-                    if (!links[cat]) links[cat] = [];
+                    if (!Array.isArray(links[cat])) links[cat] = [];
                     links[cat].push({ title: newTitle, url: url });
                     saveLinks(); render();
                 }
@@ -155,30 +165,45 @@ function render() {
 
         box.querySelector('.cat-delete-btn').onclick = (e) => {
             e.stopPropagation();
-            if(confirm(`カテゴリー「${cat}」を削除しますか？`)) { delete links[cat]; saveLinks(); render(); }
+            if(confirm(`カテゴリー「${cat}」を削除しますか？`)) { 
+                delete links[cat]; 
+                saveLinks(); 
+                render(); 
+            }
         };
 
         const list = box.querySelector('.link-list');
-        (links[cat] || []).forEach((item, idx) => {
+        (links[cat] || []).forEach(item => {
             const row = document.createElement('div');
             row.className = 'link-wrapper';
             row.innerHTML = `<span>${item.title}</span>`;
             row.onclick = () => window.open(item.url, '_blank');
             list.appendChild(row);
         });
+
         container.appendChild(box);
-        makeWidget(box, `pos_cat_${cat}`, {left: 100 + i*340, top: 550, w: 300, h: 250});
+        // IDにスペースが含まれても動くようにエスケープ処理
+        const safeKey = "pos_cat_" + cat.replace(/\s+/g, '_');
+        makeWidget(box, safeKey, {left: 100 + i*340, top: 550, w: 300, h: 250});
     });
 
+    // --- 付箋の描画 ---
     notes.forEach((n, i) => {
         const nb = document.createElement('div');
         nb.className = 'widget';
-        nb.innerHTML = `<div class="widget-header"><input type="text" class="nt-input" value="${n.title}"><span class="cat-btn cat-delete-btn">🗑️</span></div><textarea class="ni-textarea">${n.body}</textarea>`;
+        nb.innerHTML = `
+            <div class="widget-header">
+                <input type="text" class="nt-input" value="${n.title}">
+                <span class="cat-btn cat-delete-btn">🗑️</span>
+            </div>
+            <textarea class="ni-textarea">${n.body}</textarea>`;
+        
         const nt = nb.querySelector('.nt-input');
         const ni = nb.querySelector('.ni-textarea');
         nt.onmousedown = ni.onmousedown = (e) => e.stopPropagation();
         nt.oninput = () => { notes[i].title = nt.value; saveNotes(); };
         ni.oninput = () => { notes[i].body = ni.value; saveNotes(); };
+        
         nb.querySelector('.cat-delete-btn').onclick = (e) => {
             e.stopPropagation();
             notes.splice(i, 1); saveNotes(); render();
@@ -200,7 +225,11 @@ document.getElementById('add-cat-btn').onclick = () => {
     } else if (choice) {
         const idx = parseInt(choice) - 1;
         const selected = catalogKeys[idx];
-        if (selected) { links[selected] = bookmarkCatalog[selected]; saveLinks(); render(); }
+        if (selected) { 
+            links[selected] = bookmarkCatalog[selected]; 
+            saveLinks(); 
+            render(); 
+        }
     }
 };
 
