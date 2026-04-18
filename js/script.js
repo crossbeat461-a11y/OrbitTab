@@ -1,6 +1,6 @@
 /**
  * OrbitTab - デジタル管制塔 
- * js/script.js (手動リサイズ保存機能搭載版)
+ * js/script.js (手動リサイズ保存 & ドラッグ&ドロップ追加機能)
  */
 
 const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153";
@@ -10,7 +10,6 @@ const DEFAULT_NOTE = [{
     body: "1. 右下の【📥】をクリックして、PCに保存したブックマークHTMLを読み込みます。\n\n2. 次に【＋】をクリックすると、読み込んだフォルダがリストで表示されます。\n\n3. 番号を入力して、自分だけのカテゴリBOXを完成させましょう！\n\n4. 新しく空のカテゴリを作る場合は「0」を入力してください。"
 }];
 
-// --- データの取得と保存 ---
 function getStored(key, def) {
     const val = localStorage.getItem(key);
     try {
@@ -38,7 +37,7 @@ function updateClock() {
     date.innerText = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 }
 
-// --- 2. ウィジェット制御 (サイズ変更の監視を追加) ---
+// --- 2. ウィジェット制御 ---
 function makeWidget(el, key, def) {
     const pos = getStored(key, def);
     el.style.left = pos.left + "px"; 
@@ -48,7 +47,6 @@ function makeWidget(el, key, def) {
 
     const header = el.querySelector('.widget-header');
     
-    // ドラッグ移動
     header.onmousedown = function(e) {
         if (e.target.closest('.cat-btn') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
             return;
@@ -69,7 +67,6 @@ function makeWidget(el, key, def) {
         };
     };
 
-    // 【新機能】手動でのリサイズ（右下ドラッグ）を監視して保存
     const ro = new ResizeObserver(() => {
         savePos(el, key);
     });
@@ -78,7 +75,6 @@ function makeWidget(el, key, def) {
     el.onclick = () => { maxZ++; el.style.zIndex = maxZ; };
 }
 
-// 座標とサイズを一括保存するヘルパー
 function savePos(el, key) {
     localStorage.setItem(key, JSON.stringify({
         left: el.offsetLeft, 
@@ -153,15 +149,14 @@ function render() {
             <div class="widget-header">
                 <span class="widget-title">${cat}</span>
                 <div class="header-btns">
-                    <span class="cat-btn add-single-btn" title="手動追加">➕</span>
+                    <span class="cat-btn add-single-btn" title="手動追加" style="cursor:pointer; margin-right:8px; opacity:0.5;">➕</span>
                     <span class="cat-btn cat-delete-btn" title="カテゴリ削除">🗑️</span>
                 </div>
             </div>
             <div class="link-list"></div>`;
         
-        const addBtn = box.querySelector('.add-single-btn');
-        addBtn.onmousedown = (e) => e.stopPropagation(); 
-        addBtn.onclick = (e) => {
+        // --- 手動追加 ---
+        box.querySelector('.add-single-btn').onclick = (e) => {
             e.stopPropagation();
             const t = prompt("リンクの名前を入力:", "新しいサイト");
             if (!t) return;
@@ -171,6 +166,31 @@ function render() {
             links[cat].push({ title: t, url: u });
             saveLinks();
             render();
+        };
+
+        // --- 【新機能】ドラッグ&ドロップでリンクを追加 ---
+        box.ondragover = (e) => {
+            e.preventDefault();
+            box.style.borderColor = "#00d2ff"; // 重なった時に色を変える
+            box.style.boxShadow = "0 0 20px rgba(0, 210, 255, 0.5)";
+        };
+        box.ondragleave = () => {
+            box.style.borderColor = "rgba(255, 255, 255, 0.2)";
+            box.style.boxShadow = "0 10px 40px rgba(0, 0, 0, 0.5)";
+        };
+        box.ondrop = (e) => {
+            e.preventDefault();
+            box.style.borderColor = "rgba(255, 255, 255, 0.2)";
+            const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+            if (url && url.startsWith('http')) {
+                const newTitle = prompt("名前を入力:", "ドロップしたリンク");
+                if (newTitle) {
+                    if (!Array.isArray(links[cat])) links[cat] = [];
+                    links[cat].push({ title: newTitle, url: url });
+                    saveLinks(); 
+                    render();
+                }
+            }
         };
 
         const delBtn = box.querySelector('.cat-delete-btn');
