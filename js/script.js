@@ -1,12 +1,22 @@
+/**
+ * OrbitTab - デジタル管制塔 
+ * js/script.js (Final Stable Version)
+ */
+
 const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153";
 const DEFAULT_NOTE = [{ 
     title: "🚀 OrbitTab クイックガイド", 
     body: "1. 右下の【📥】をクリックして、PCに保存したブックマークHTMLを読み込みます。\n\n2. 次に【＋】をクリックすると、読み込んだフォルダがリストで表示されます。\n\n3. 番号を入力して、自分だけのカテゴリBOXを完成させましょう！"
 }];
 
+// --- データの取得と保存 ---
 function getStored(key, def) {
     const val = localStorage.getItem(key);
-    return (val === null) ? def : JSON.parse(val);
+    try {
+        return (val === null) ? def : JSON.parse(val);
+    } catch(e) {
+        return def;
+    }
 }
 
 let links = getStored('orbitTab_v1_links', {});
@@ -27,32 +37,47 @@ function updateClock() {
     date.innerText = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 }
 
-// --- 2. ウィジェット制御 ---
+// --- 2. ウィジェット制御 (ドラッグ & 座標保存) ---
 function makeWidget(el, key, def) {
     const pos = getStored(key, def);
-    el.style.left = pos.left + "px"; el.style.top = pos.top + "px";
-    el.style.width = pos.w + "px"; el.style.height = pos.h + "px";
+    el.style.left = pos.left + "px"; 
+    el.style.top = pos.top + "px";
+    el.style.width = pos.w + "px"; 
+    el.style.height = pos.h + "px";
 
     const header = el.querySelector('.widget-header');
+    
+    // ヘッダーでのドラッグ開始処理
     header.onmousedown = function(e) {
-        // ボタン類をクリックした時はドラッグを開始しない
-        if (e.target.closest('.cat-btn') || e.target.tagName === 'INPUT') return;
-        maxZ++; el.style.zIndex = maxZ;
+        // ボタン類や入力欄をクリックした場合はドラッグを開始しない（ここが重要）
+        if (e.target.closest('.cat-btn') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            return;
+        }
+        
+        maxZ++; 
+        el.style.zIndex = maxZ;
         let startX = e.clientX - el.offsetLeft;
         let startY = e.clientY - el.offsetTop;
+        
         document.onmousemove = function(me) {
             el.style.left = (me.clientX - startX) + "px";
             el.style.top = (me.clientY - startY) + "px";
         };
+        
         document.onmouseup = function() {
             document.onmousemove = null;
-            localStorage.setItem(key, JSON.stringify({left: el.offsetLeft, top: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight}));
+            localStorage.setItem(key, JSON.stringify({
+                left: el.offsetLeft, 
+                top: el.offsetTop, 
+                w: el.offsetWidth, 
+                h: el.offsetHeight
+            }));
         };
     };
     el.onclick = () => { maxZ++; el.style.zIndex = maxZ; };
 }
 
-// --- 3. インポート機能 ---
+// --- 3. インポート機能 (ブックマーク & 背景) ---
 function setupImportFeature() {
     const importBtn = document.getElementById('import-bookmarks-btn');
     const bookmarkInput = document.getElementById('bookmark-input');
@@ -69,7 +94,6 @@ function setupImportFeature() {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(ev.target.result, 'text/html');
                 const allLinks = doc.querySelectorAll('a');
-                if (allLinks.length === 0) { alert("ブックマークが見つかりません。"); return; }
                 bookmarkCatalog = {};
                 allLinks.forEach(a => {
                     let folderName = "未分類";
@@ -83,7 +107,7 @@ function setupImportFeature() {
                     if (!bookmarkCatalog[folderName]) bookmarkCatalog[folderName] = [];
                     bookmarkCatalog[folderName].push({ title: a.textContent, url: a.href });
                 });
-                alert(`読み込み完了！\n${Object.keys(bookmarkCatalog).length} カテゴリ見つかりました。`);
+                alert(`読み込み完了！\n${Object.keys(bookmarkCatalog).length} カテゴリを認識しました。`);
             };
             reader.readAsText(file);
         };
@@ -93,7 +117,6 @@ function setupImportFeature() {
         bgBtn.onclick = () => bgInput.click();
         bgInput.onchange = (e) => {
             const file = e.target.files[0];
-            if (!file) return;
             const reader = new FileReader();
             reader.onload = (ev) => {
                 const url = ev.target.result;
@@ -111,7 +134,7 @@ function render() {
     if (!container) return;
     container.innerHTML = "";
 
-    // --- カテゴリBOXの描画 ---
+    // カテゴリBOXの描画
     Object.keys(links).forEach((cat, i) => {
         const box = document.createElement('div');
         box.className = 'widget';
@@ -120,33 +143,46 @@ function render() {
                 <span class="widget-title">${cat}</span>
                 <div class="header-btns">
                     <span class="cat-btn add-single-btn" title="手動追加">➕</span>
-                    <span class="cat-btn cat-delete-btn" title="削除">🗑️</span>
+                    <span class="cat-btn cat-delete-btn" title="カテゴリ削除">🗑️</span>
                 </div>
             </div>
             <div class="link-list"></div>`;
         
-        // 手動追加のロジック（ここを強化しました）
-        box.querySelector('.add-single-btn').onclick = (e) => {
+        // --- ➕ボタン：単体リンク追加ロジック ---
+        const addBtn = box.querySelector('.add-single-btn');
+        // mousedownを止めてドラッグ機能との衝突を防ぐ
+        addBtn.onmousedown = (e) => e.stopPropagation(); 
+        addBtn.onclick = (e) => {
             e.stopPropagation();
-            const t = prompt("リンクの名前を入力:", "新しいサイト");
-            if(!t) return;
-            const u = prompt("URLを入力:", "https://");
-            if(!u || !u.startsWith('http')) { 
-                alert("有効なURLを入力してください（httpから始まるもの）。"); 
-                return; 
+            const t = prompt("リンクの名前を入力してください:", "新しいサイト");
+            if (!t) return;
+            const u = prompt("URLを入力してください (https://...):", "https://");
+            if (!u || !u.startsWith('http')) {
+                alert("有効なURLを入力してください。");
+                return;
             }
             
-            // 安全策：配列が存在しない場合は作成する
-            if (!Array.isArray(links[cat])) {
-                links[cat] = [];
-            }
+            // 配列の存在を保証
+            if (!Array.isArray(links[cat])) links[cat] = [];
             
             links[cat].push({ title: t, url: u });
             saveLinks();
             render();
         };
 
-        // ドラッグ＆ドロップ
+        // --- 🗑️ボタン：カテゴリ削除ロジック ---
+        const delBtn = box.querySelector('.cat-delete-btn');
+        delBtn.onmousedown = (e) => e.stopPropagation();
+        delBtn.onclick = (e) => {
+            e.stopPropagation();
+            if(confirm(`カテゴリー「${cat}」を削除しますか？`)) {
+                delete links[cat];
+                saveLinks();
+                render();
+            }
+        };
+
+        // --- ドラッグ＆ドロップ対応 ---
         box.ondragover = (e) => { e.preventDefault(); box.style.borderColor = "#00d2ff"; };
         box.ondragleave = () => { box.style.borderColor = "rgba(255, 255, 255, 0.2)"; };
         box.ondrop = (e) => {
@@ -154,24 +190,17 @@ function render() {
             box.style.borderColor = "rgba(255, 255, 255, 0.2)";
             const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
             if (url && url.startsWith('http')) {
-                const newTitle = prompt("新しいリンクの名前:", "新しいリンク");
+                const newTitle = prompt("名前を入力:", "ドロップしたリンク");
                 if (newTitle) {
                     if (!Array.isArray(links[cat])) links[cat] = [];
                     links[cat].push({ title: newTitle, url: url });
-                    saveLinks(); render();
+                    saveLinks(); 
+                    render();
                 }
             }
         };
 
-        box.querySelector('.cat-delete-btn').onclick = (e) => {
-            e.stopPropagation();
-            if(confirm(`カテゴリー「${cat}」を削除しますか？`)) { 
-                delete links[cat]; 
-                saveLinks(); 
-                render(); 
-            }
-        };
-
+        // リンク一覧の表示
         const list = box.querySelector('.link-list');
         (links[cat] || []).forEach(item => {
             const row = document.createElement('div');
@@ -182,7 +211,6 @@ function render() {
         });
 
         container.appendChild(box);
-        // IDにスペースが含まれても動くようにエスケープ処理
         const safeKey = "pos_cat_" + cat.replace(/\s+/g, '_');
         makeWidget(box, safeKey, {left: 100 + i*340, top: 550, w: 300, h: 250});
     });
@@ -200,33 +228,44 @@ function render() {
         
         const nt = nb.querySelector('.nt-input');
         const ni = nb.querySelector('.ni-textarea');
+        
+        // テキストエリア操作時にドラッグが始まらないようにする
         nt.onmousedown = ni.onmousedown = (e) => e.stopPropagation();
         nt.oninput = () => { notes[i].title = nt.value; saveNotes(); };
         ni.oninput = () => { notes[i].body = ni.value; saveNotes(); };
         
-        nb.querySelector('.cat-delete-btn').onclick = (e) => {
+        const delNoteBtn = nb.querySelector('.cat-delete-btn');
+        delNoteBtn.onmousedown = (e) => e.stopPropagation();
+        delNoteBtn.onclick = (e) => {
             e.stopPropagation();
-            notes.splice(i, 1); saveNotes(); render();
+            notes.splice(i, 1);
+            saveNotes();
+            render();
         };
+        
         container.appendChild(nb);
         makeWidget(nb, `pos_note_${i}`, {left: 400 + i*50, top: 150 + i*50, w: 320, h: 280});
     });
 }
 
-// --- 5. ボタンアクション ---
+// --- 5. ボタンアクション (下部コントロール) ---
 document.getElementById('add-cat-btn').onclick = () => {
     const catalogKeys = Object.keys(bookmarkCatalog);
-    let msg = "追加方法を選択：\n[0] 空のカテゴリ作成\n";
-    catalogKeys.forEach((name, i) => msg += `[${i + 1}] ${name}\n`);
+    let msg = "追加方法を選択してください：\n[0] 空のカテゴリを作成\n";
+    catalogKeys.forEach((name, i) => {
+        msg += `[${i + 1}] ${name}\n`;
+    });
+    
     const choice = prompt(msg);
     if (choice === "0") {
-        const n = prompt("カテゴリ名:");
+        const n = prompt("新しいカテゴリ名を入力:");
         if (n) { links[n] = []; saveLinks(); render(); }
     } else if (choice) {
         const idx = parseInt(choice) - 1;
         const selected = catalogKeys[idx];
         if (selected) { 
-            links[selected] = bookmarkCatalog[selected]; 
+            // 参照を切るためにスプレッド演算子でコピー
+            links[selected] = [...bookmarkCatalog[selected]]; 
             saveLinks(); 
             render(); 
         }
@@ -234,14 +273,22 @@ document.getElementById('add-cat-btn').onclick = () => {
 };
 
 document.getElementById('guide-btn').onclick = () => window.open(NOTE_URL, '_blank');
+
 document.getElementById('note-setup-btn').onclick = () => {
-    notes.push({title: "新規付箋", body: ""}); saveNotes(); render();
+    notes.push({title: "新規付箋", body: ""}); 
+    saveNotes(); 
+    render();
 };
 
+// --- 初期化 ---
 window.onload = function() { 
-    updateClock(); setInterval(updateClock, 1000);
+    updateClock(); 
+    setInterval(updateClock, 1000);
     render(); 
     setupImportFeature(); 
+    
     const savedBg = localStorage.getItem('orbitTab_bg_v4');
-    if (savedBg) document.getElementById('bg-container').style.backgroundImage = `url(${savedBg})`;
+    if (savedBg) {
+        document.getElementById('bg-container').style.backgroundImage = `url(${savedBg})`;
+    }
 };
