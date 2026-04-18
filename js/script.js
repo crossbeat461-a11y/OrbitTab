@@ -5,7 +5,13 @@ const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153";
 const INITIAL_SAMPLE_LINKS = {
     "クイックアクセス": [{ title: "Google 検索", url: "https://www.google.com" }]
 };
-const DEFAULT_NOTE = [{ title: "タスク", body: "🚀 OrbitTabへようこそ！" }];
+const DEFAULT_NOTE = [{ 
+    title: "🚀 OrbitTab クイックガイド", 
+    body: "1. 右下の【📥】をクリックして、PCに保存したブックマークHTMLを読み込みます。\n\n" +
+          "2. 次に【＋】をクリックすると、あなたのブックマークフォルダがリストで表示されます。\n\n" +
+          "3. 好きな番号を入力すれば、一瞬で自分だけのカテゴリBOXが完成！\n\n" +
+          "※HTMLの作り方：Chromeの『ブックマークマネージャー』から『エクスポート』を選んで保存してください。"
+}];
 
 function getStored(key, def) {
     const val = localStorage.getItem(key);
