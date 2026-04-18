@@ -75,20 +75,44 @@ function setupImportFeature() {
         reader.onload = function(ev) {
             const parser = new DOMParser();
             const doc = parser.parseFromString(ev.target.result, 'text/html');
-            const folders = doc.querySelectorAll('h3');
-            if (folders.length === 0) {
+            
+            // 全てのリンク（<a>タグ）を取得
+            const allLinks = doc.querySelectorAll('a');
+            if (allLinks.length === 0) {
                 alert("ブックマークが見つかりませんでした。HTML形式か確認してください。");
                 return;
             }
+
             bookmarkCatalog = {};
-            folders.forEach(folder => {
-                const name = folder.textContent;
-                const linksInFolder = [];
-                const linkNodes = folder.parentElement.querySelectorAll('a');
-                linkNodes.forEach(a => linksInFolder.push({ title: a.textContent, url: a.href }));
-                bookmarkCatalog[name] = linksInFolder;
+            
+            // <a>タグを一つずつ見て、親要素のフォルダ名を探し出す
+            allLinks.forEach(a => {
+                let folderName = "未分類";
+                // リンクの親を遡って、一番近い見出し（H3）を探す
+                let parent = a.parentElement;
+                while (parent) {
+                    const h3 = parent.querySelector('h3');
+                    if (h3) {
+                        folderName = h3.textContent;
+                        break;
+                    }
+                    // さらに上の階層へ
+                    parent = parent.parentElement;
+                    if (parent === doc.body) break;
+                }
+
+                if (!bookmarkCatalog[folderName]) {
+                    bookmarkCatalog[folderName] = [];
+                }
+                bookmarkCatalog[folderName].push({ title: a.textContent, url: a.href });
             });
-            alert("読み込み完了！\n『＋』ボタンを押すと、ブックマークから好きなフォルダを選んで追加できます。");
+
+            // フォルダが多すぎると大変なので、空のフォルダは除外
+            Object.keys(bookmarkCatalog).forEach(key => {
+                if (bookmarkCatalog[key].length === 0) delete bookmarkCatalog[key];
+            });
+
+            alert(`読み込み完了！\n${Object.keys(bookmarkCatalog).length} 個のカテゴリが見つかりました。\n『＋』ボタンから選んで追加してください。`);
         };
         reader.readAsText(file);
     };
