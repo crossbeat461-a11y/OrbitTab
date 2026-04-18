@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "OrbitTab - あなた専用のデジタル管制塔",
+  "name": "OrbitTab - デジタル管制塔",
   "version": "1.1.2",
-  "description": "カレンダー、付箋、リンク集を自由自在に配置。ブラウザの『新しいタブ』を自分好みのコクピットに作り変える、究極のパーソナライズ拡張機能です。",
+  "description": "カレンダー、付箋、リンク集を自由自在に配置。自分好みのダッシュボードを作成できます。",
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
@@ -11,8 +11,5 @@
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  },
-  "action": {
-    "default_title": "OrbitTab"
   }
 }
