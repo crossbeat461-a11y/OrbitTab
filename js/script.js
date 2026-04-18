@@ -1,26 +1,31 @@
+// ==========================================
+// 0. 初期設定 & データ読み込み
+// ==========================================
 const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153";
-const DEFAULT_LINKS = {
-    "クイックアクセス": [
-        { title: "Google 検索", url: "https://www.google.com" },
-        { title: "YouTube", url: "https://www.youtube.com" }
-    ],
-    "OrbitTab ガイド": [
-        { title: "使いこなしガイド (note)", url: NOTE_URL }
-    ]
+const INITIAL_SAMPLE_LINKS = {
+    "クイックアクセス": [{ title: "Google 検索", url: "https://www.google.com" }]
 };
 const DEFAULT_NOTE = [{ title: "タスク", body: "🚀 OrbitTabへようこそ！" }];
 
 function getStored(key, def) {
     const val = localStorage.getItem(key);
-    return (val === null || val === "{}") ? def : JSON.parse(val);
+    return (val === null) ? def : JSON.parse(val);
 }
 
-let links = getStored('orbitTab_v1_links', DEFAULT_LINKS);
+let links = getStored('orbitTab_v1_links', INITIAL_SAMPLE_LINKS);
 let notes = getStored('orbitTab_notes_v4', DEFAULT_NOTE);
 let calUrl = localStorage.getItem('orbitTab_calUrl') || "";
+let bookmarkCatalog = {}; // ブックマークの予備
 let maxZ = 100;
 
-// 時計
+// リンク保存用関数
+function saveLinks() {
+    localStorage.setItem('orbitTab_v1_links', JSON.stringify(links));
+}
+
+// ==========================================
+// 1. 基本機能 (時計・ウィジェット化)
+// ==========================================
 function updateClock() {
     const clock = document.getElementById('clock');
     const date = document.getElementById('date');
@@ -31,46 +36,66 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 
-// ウィジェット機能（ドラッグ改善）
 function makeWidget(el, key, def) {
     const pos = getStored(key, def);
     el.style.left = pos.left + "px"; el.style.top = pos.top + "px";
     el.style.width = pos.w + "px"; el.style.height = pos.h + "px";
 
     const header = el.querySelector('.widget-header');
-    
-    // ヘッダーを掴んだときだけドラッグを開始
     header.onmousedown = function(e) {
-        // ボタンや入力欄の上なら無視
         if (e.target.tagName === 'INPUT' || e.target.classList.contains('cat-delete-btn')) return;
-        
         maxZ++; el.style.zIndex = maxZ;
         let startX = e.clientX - el.offsetLeft;
         let startY = e.clientY - el.offsetTop;
-
         document.onmousemove = function(me) {
             el.style.left = (me.clientX - startX) + "px";
             el.style.top = (me.clientY - startY) + "px";
         };
-
         document.onmouseup = function() {
             document.onmousemove = null;
-            localStorage.setItem(key, JSON.stringify({
-                left: el.offsetLeft, 
-                top: el.offsetTop, 
-                w: el.offsetWidth, 
-                h: el.offsetHeight
-            }));
+            localStorage.setItem(key, JSON.stringify({left: el.offsetLeft, top: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight}));
         };
     };
-    
-    // 中身をクリックしても最前面に来るようにする
-    el.onclick = function() {
-        maxZ++; el.style.zIndex = maxZ;
-    };
+    el.onclick = () => { maxZ++; el.style.zIndex = maxZ; };
 }
 
-// 描画エンジン
+// ==========================================
+// 2. インポート機能
+// ==========================================
+const bookmarkInput = document.getElementById('bookmark-input');
+document.getElementById('import-bookmarks-btn').onclick = () => {
+    alert("【手順】\n1. Chromeのブックマークマネージャーで『エクスポート』を実行\n2. 保存されたHTMLファイルをこの後に選択してください。");
+    bookmarkInput.click();
+};
+
+bookmarkInput.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(ev.target.result, 'text/html');
+        const folders = doc.querySelectorAll('h3');
+        if (folders.length === 0) {
+            alert("ブックマークが見つかりませんでした。HTML形式か確認してください。");
+            return;
+        }
+        bookmarkCatalog = {};
+        folders.forEach(folder => {
+            const name = folder.textContent;
+            const linksInFolder = [];
+            const linkNodes = folder.parentElement.querySelectorAll('a');
+            linkNodes.forEach(a => linksInFolder.push({ title: a.textContent, url: a.href }));
+            bookmarkCatalog[name] = linksInFolder;
+        });
+        alert("読み込み完了！\n『＋』ボタンを押すと、ブックマークから好きなフォルダを選んで追加できます。");
+    };
+    reader.readAsText(file);
+};
+
+// ==========================================
+// 3. 描画 & カテゴリ追加
+// ==========================================
 function render() {
     const container = document.getElementById('widgets-container');
     if (!container) return;
@@ -82,17 +107,17 @@ function render() {
         box.className = 'widget';
         box.innerHTML = '<div class="widget-header"><span class="widget-title">' + cat + '</span><span class="cat-delete-btn">🗑️</span></div><div class="link-list"></div>';
         
-        box.querySelector('.cat-delete-btn').onclick = function(e) { 
+        box.querySelector('.cat-delete-btn').onclick = function(e) {
             e.stopPropagation();
-            if(confirm("このカテゴリを削除しますか？")){ 
-                delete links[cat]; 
-                localStorage.setItem('orbitTab_v1_links', JSON.stringify(links)); 
-                render(); 
-            } 
+            if(confirm("カテゴリー「" + cat + "」を削除しますか？")) {
+                delete links[cat];
+                saveLinks();
+                render();
+            }
         };
-        
+
         const list = box.querySelector('.link-list');
-        links[cat].forEach(function(item, idx) {
+        (links[cat] || []).forEach(function(item, idx) {
             const row = document.createElement('div');
             row.className = 'link-wrapper';
             row.innerHTML = '<span>' + item.title + '</span>';
@@ -103,38 +128,58 @@ function render() {
         makeWidget(box, "pos_cat_" + cat.replace(/\s+/g, '_'), {left: 100 + i*340, top: 550, w: 300, h: 250});
     });
 
-    // 付箋（入力不具合を修正）
+    // 付箋
     notes.forEach(function(n, i) {
         const nb = document.createElement('div');
         nb.className = 'widget';
-        nb.innerHTML = '<div class="widget-header"><input type="text" class="nt-input" value="' + n.title + '" placeholder="見出し"><span class="cat-delete-btn">🗑️</span></div><textarea class="ni-textarea" placeholder="メモを入力...">' + n.body + '</textarea>';
+        nb.innerHTML = '<div class="widget-header"><input type="text" class="nt-input" value="' + n.title + '"><span class="cat-delete-btn">🗑️</span></div><textarea class="ni-textarea">' + n.body + '</textarea>';
         
         const nt = nb.querySelector('.nt-input');
         const ni = nb.querySelector('.ni-textarea');
-        const del = nb.querySelector('.cat-delete-btn');
-
-        // 文字入力ができるようにイベントのバブリングを停止
         nt.onmousedown = ni.onmousedown = (e) => e.stopPropagation();
 
-        nt.oninput = function() { notes[i].title = nt.value; localStorage.setItem('orbitTab_notes_v4', JSON.stringify(notes)); };
-        ni.oninput = function() { notes[i].body = ni.value; localStorage.setItem('orbitTab_notes_v4', JSON.stringify(notes)); };
+        nt.oninput = () => { notes[i].title = nt.value; localStorage.setItem('orbitTab_notes_v4', JSON.stringify(notes)); };
+        ni.oninput = () => { notes[i].body = ni.value; localStorage.setItem('orbitTab_notes_v4', JSON.stringify(notes)); };
         
-        del.onclick = function(e) { 
+        nb.querySelector('.cat-delete-btn').onclick = (e) => {
             e.stopPropagation();
-            notes.splice(i, 1); 
-            localStorage.setItem('orbitTab_notes_v4', JSON.stringify(notes)); 
-            render(); 
+            notes.splice(i, 1);
+            localStorage.setItem('orbitTab_notes_v4', JSON.stringify(notes));
+            render();
         };
-        
         container.appendChild(nb);
         makeWidget(nb, "pos_note_" + i, {left: 450 + i*30, top: 150 + i*30, w: 300, h: 250});
     });
 }
 
-// 矢印キーでスクロール
+// ＋ボタンの挙動：カタログがあれば選択、なければ新規
+document.getElementById('add-cat-btn').onclick = () => {
+    const catalogKeys = Object.keys(bookmarkCatalog);
+    if (catalogKeys.length > 0) {
+        let msg = "追加方法を選択：\n[0] 空のカテゴリ作成\n-- ブックマーク --\n";
+        catalogKeys.forEach((name, i) => msg += `[${i + 1}] ${name}\n`);
+        const choice = prompt(msg);
+        if (!choice) return;
+        if (choice === "0") {
+            const n = prompt("カテゴリ名:");
+            if (n) { links[n] = []; saveLinks(); render(); }
+        } else {
+            const idx = parseInt(choice) - 1;
+            const selected = catalogKeys[idx];
+            if (selected) { links[selected] = bookmarkCatalog[selected]; saveLinks(); render(); }
+        }
+    } else {
+        const n = prompt("新しいカテゴリ名:");
+        if (n) { links[n] = []; saveLinks(); render(); }
+    }
+};
+
+// ==========================================
+// 4. その他操作 & 起動
+// ==========================================
 window.addEventListener('keydown', function(e) {
     if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
-    const step = 60;
+    const step = 80;
     const main = document.querySelector('.main-interface');
     if (e.key === 'ArrowRight') main.scrollLeft += step;
     if (e.key === 'ArrowLeft') main.scrollLeft -= step;
@@ -142,66 +187,13 @@ window.addEventListener('keydown', function(e) {
     if (e.key === 'ArrowUp') main.scrollTop -= step;
 });
 
-// 操作ボタン
 document.getElementById('guide-btn').onclick = () => window.open(NOTE_URL, '_blank');
-document.getElementById('add-cat-btn').onclick = () => {
-    const n = prompt("カテゴリ名:");
-    if(n) { links[n] = []; localStorage.setItem('orbitTab_v1_links', JSON.stringify(links)); render(); }
-};
 document.getElementById('note-setup-btn').onclick = () => {
     if(notes.length < 4) { notes.push({title: "タスク", body: ""}); localStorage.setItem('orbitTab_notes_v4', JSON.stringify(notes)); render(); }
 };
 document.getElementById('cal-setup-btn').onclick = () => {
-    const u = prompt("カレンダーURL:");
+    const u = prompt("GoogleカレンダーURL:");
     if(u) { localStorage.setItem('orbitTab_calUrl', u); location.reload(); }
 };
 
 window.onload = function() { updateClock(); render(); };
-// ==========================================
-// ブックマーク・インポート機能
-// ==========================================
-const bookmarkInput = document.getElementById('bookmark-input');
-document.getElementById('import-bookmarks-btn').onclick = () => bookmarkInput.click();
-
-bookmarkInput.onchange = function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(ev.target.result, 'text/html');
-        
-        // フォルダ（H3タグ）を取得
-        const folders = doc.querySelectorAll('h3');
-        
-        if (folders.length === 0) {
-            alert("ブックマークが見つかりませんでした。HTML形式のファイルを選択してください。");
-            return;
-        }
-
-        folders.forEach((folder) => {
-            const folderName = folder.textContent;
-            const linkNodes = folder.parentElement.querySelectorAll('a');
-            
-            if (linkNodes.length > 0) {
-                // まだそのカテゴリがなければ作成
-                if (!links[folderName]) {
-                    links[folderName] = [];
-                }
-                
-                linkNodes.forEach((a) => {
-                    links[folderName].push({
-                        title: a.textContent,
-                        url: a.href
-                    });
-                });
-            }
-        });
-
-        saveLinks(); // localStorageに保存
-        render();    // 画面に大量のBOXが出現
-        alert("インポートが完了しました。不要なBOXはゴミ箱から削除してください。");
-    };
-    reader.readAsText(file);
-};
