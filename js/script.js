@@ -157,3 +157,51 @@ document.getElementById('cal-setup-btn').onclick = () => {
 };
 
 window.onload = function() { updateClock(); render(); };
+// ==========================================
+// ブックマーク・インポート機能
+// ==========================================
+const bookmarkInput = document.getElementById('bookmark-input');
+document.getElementById('import-bookmarks-btn').onclick = () => bookmarkInput.click();
+
+bookmarkInput.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(ev.target.result, 'text/html');
+        
+        // フォルダ（H3タグ）を取得
+        const folders = doc.querySelectorAll('h3');
+        
+        if (folders.length === 0) {
+            alert("ブックマークが見つかりませんでした。HTML形式のファイルを選択してください。");
+            return;
+        }
+
+        folders.forEach((folder) => {
+            const folderName = folder.textContent;
+            const linkNodes = folder.parentElement.querySelectorAll('a');
+            
+            if (linkNodes.length > 0) {
+                // まだそのカテゴリがなければ作成
+                if (!links[folderName]) {
+                    links[folderName] = [];
+                }
+                
+                linkNodes.forEach((a) => {
+                    links[folderName].push({
+                        title: a.textContent,
+                        url: a.href
+                    });
+                });
+            }
+        });
+
+        saveLinks(); // localStorageに保存
+        render();    // 画面に大量のBOXが出現
+        alert("インポートが完了しました。不要なBOXはゴミ箱から削除してください。");
+    };
+    reader.readAsText(file);
+};
