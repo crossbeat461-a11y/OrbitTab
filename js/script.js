@@ -15,16 +15,15 @@ function getStored(key, def) {
 let links = getStored('orbitTab_v1_links', INITIAL_SAMPLE_LINKS);
 let notes = getStored('orbitTab_notes_v4', DEFAULT_NOTE);
 let calUrl = localStorage.getItem('orbitTab_calUrl') || "";
-let bookmarkCatalog = {}; // ブックマークの予備
+let bookmarkCatalog = {}; 
 let maxZ = 100;
 
-// リンク保存用関数
 function saveLinks() {
     localStorage.setItem('orbitTab_v1_links', JSON.stringify(links));
 }
 
 // ==========================================
-// 1. 基本機能 (時計・ウィジェット化)
+// 1. 基本機能 (時計・ドラッグ)
 // ==========================================
 function updateClock() {
     const clock = document.getElementById('clock');
@@ -60,18 +59,14 @@ function makeWidget(el, key, def) {
 }
 
 // ==========================================
-// 2. インポート機能（修正版）
+// 2. インポート機能
 // ==========================================
-// ボタンの紐付けを関数化して、確実に動作するようにします
 function setupImportFeature() {
     const importBtn = document.getElementById('import-bookmarks-btn');
     const bookmarkInput = document.getElementById('bookmark-input');
-
     if (!importBtn || !bookmarkInput) return;
 
-    importBtn.onclick = () => {
-        bookmarkInput.click();
-    };
+    importBtn.onclick = () => bookmarkInput.click();
 
     bookmarkInput.onchange = function(e) {
         const file = e.target.files[0];
@@ -99,7 +94,42 @@ function setupImportFeature() {
     };
 }
 
-    // 付箋
+// ==========================================
+// 3. 描画 (render)
+// ==========================================
+function render() {
+    const container = document.getElementById('widgets-container');
+    if (!container) return;
+    container.innerHTML = "";
+
+    // カテゴリBOXの表示
+    Object.keys(links).forEach(function(cat, i) {
+        const box = document.createElement('div');
+        box.className = 'widget';
+        box.innerHTML = '<div class="widget-header"><span class="widget-title">' + cat + '</span><span class="cat-delete-btn">🗑️</span></div><div class="link-list"></div>';
+        
+        box.querySelector('.cat-delete-btn').onclick = function(e) {
+            e.stopPropagation();
+            if(confirm("カテゴリー「" + cat + "」を削除しますか？")) {
+                delete links[cat];
+                saveLinks();
+                render();
+            }
+        };
+
+        const list = box.querySelector('.link-list');
+        (links[cat] || []).forEach(function(item, idx) {
+            const row = document.createElement('div');
+            row.className = 'link-wrapper';
+            row.innerHTML = '<span>' + item.title + '</span>';
+            row.onclick = function() { window.open(item.url, '_blank'); };
+            list.appendChild(row);
+        });
+        container.appendChild(box);
+        makeWidget(box, "pos_cat_" + cat.replace(/\s+/g, '_'), {left: 100 + i*340, top: 550, w: 300, h: 250});
+    });
+
+    // 付箋の表示
     notes.forEach(function(n, i) {
         const nb = document.createElement('div');
         nb.className = 'widget';
@@ -118,11 +148,17 @@ function setupImportFeature() {
             localStorage.setItem('orbitTab_notes_v4', JSON.stringify(notes));
             render();
         };
+
         container.appendChild(nb);
         makeWidget(nb, "pos_note_" + i, {left: 450 + i*30, top: 150 + i*30, w: 300, h: 250});
     });
+}
 
-// ＋ボタンの挙動：カタログがあれば選択、なければ新規
+// ==========================================
+// 4. アクション & 起動
+// ==========================================
+
+// ＋ボタン
 document.getElementById('add-cat-btn').onclick = () => {
     const catalogKeys = Object.keys(bookmarkCatalog);
     if (catalogKeys.length > 0) {
@@ -144,9 +180,7 @@ document.getElementById('add-cat-btn').onclick = () => {
     }
 };
 
-// ==========================================
-// 4. その他操作 & 起動
-// ==========================================
+// スクロール
 window.addEventListener('keydown', function(e) {
     if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
     const step = 80;
@@ -169,5 +203,5 @@ document.getElementById('cal-setup-btn').onclick = () => {
 window.onload = function() { 
     updateClock(); 
     render(); 
-    setupImportFeature(); // これを追加！
+    setupImportFeature(); 
 };
