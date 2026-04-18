@@ -1,11 +1,10 @@
 /**
  * OrbitTab - デジタル管制塔 
- * js/script.js (クイックガイド修正版)
+ * js/script.js (付箋自動リサイズ機能搭載版)
  */
 
 const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153";
 
-// 1. 最初にある付箋の内容を修正 (手順4を追加)
 const DEFAULT_NOTE = [{ 
     title: "🚀 OrbitTab クイックガイド", 
     body: "1. 右下の【📥】をクリックして、PCに保存したブックマークHTMLを読み込みます。\n\n2. 次に【＋】をクリックすると、読み込んだフォルダがリストで表示されます。\n\n3. 番号を入力して、自分だけのカテゴリBOXを完成させましょう！\n\n4. 新しく空のカテゴリを作る場合は「0」を入力してください。"
@@ -133,6 +132,7 @@ function render() {
     if (!container) return;
     container.innerHTML = "";
 
+    // --- カテゴリBOXの描画 ---
     Object.keys(links).forEach((cat, i) => {
         const box = document.createElement('div');
         box.className = 'widget';
@@ -205,6 +205,7 @@ function render() {
         makeWidget(box, safeKey, {left: 100 + i*340, top: 550, w: 300, h: 250});
     });
 
+    // --- 付箋の描画 (自動リサイズ対応) ---
     notes.forEach((n, i) => {
         const nb = document.createElement('div');
         nb.className = 'widget';
@@ -217,9 +218,28 @@ function render() {
         
         const nt = nb.querySelector('.nt-input');
         const ni = nb.querySelector('.ni-textarea');
+
+        // 自動リサイズ用関数
+        const autoResize = () => {
+            ni.style.height = 'auto'; 
+            ni.style.height = ni.scrollHeight + 'px';
+            nb.style.height = (ni.scrollHeight + 50) + 'px'; 
+            // 座標とサイズを保存
+            localStorage.setItem(`pos_note_${i}`, JSON.stringify({
+                left: nb.offsetLeft, top: nb.offsetTop, 
+                w: nb.offsetWidth, h: nb.offsetHeight
+            }));
+        };
+
         nt.onmousedown = ni.onmousedown = (e) => e.stopPropagation();
+        
         nt.oninput = () => { notes[i].title = nt.value; saveNotes(); };
-        ni.oninput = () => { notes[i].body = ni.value; saveNotes(); };
+        
+        ni.oninput = () => { 
+            notes[i].body = ni.value; 
+            saveNotes(); 
+            autoResize(); // 入力に合わせてサイズ変更
+        };
         
         const delNoteBtn = nb.querySelector('.cat-delete-btn');
         delNoteBtn.onmousedown = (e) => e.stopPropagation();
@@ -229,16 +249,18 @@ function render() {
             saveNotes();
             render();
         };
+        
         container.appendChild(nb);
         makeWidget(nb, `pos_note_${i}`, {left: 400 + i*50, top: 150 + i*50, w: 320, h: 280});
+        
+        // 初期描画時にもリサイズを実行
+        setTimeout(autoResize, 0);
     });
 }
 
 // --- 5. ボタンアクション ---
 document.getElementById('add-cat-btn').onclick = () => {
     const catalogKeys = Object.keys(bookmarkCatalog);
-    
-    // 2. メッセージに「0を入力」の案内を追加
     let msg = "追加方法を選択してください：\n[0] 空のカテゴリ作成 (空のカテゴリを作成する場合「0」を入力してください)\n";
     
     catalogKeys.forEach((name, i) => {
