@@ -1,6 +1,6 @@
 /**
  * OrbitTab - デジタル管制塔 
- * js/script.js (付箋自動リサイズ機能搭載版)
+ * js/script.js (手動リサイズ保存機能搭載版)
  */
 
 const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153";
@@ -38,7 +38,7 @@ function updateClock() {
     date.innerText = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 }
 
-// --- 2. ウィジェット制御 ---
+// --- 2. ウィジェット制御 (サイズ変更の監視を追加) ---
 function makeWidget(el, key, def) {
     const pos = getStored(key, def);
     el.style.left = pos.left + "px"; 
@@ -48,6 +48,7 @@ function makeWidget(el, key, def) {
 
     const header = el.querySelector('.widget-header');
     
+    // ドラッグ移動
     header.onmousedown = function(e) {
         if (e.target.closest('.cat-btn') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
             return;
@@ -64,15 +65,27 @@ function makeWidget(el, key, def) {
         
         document.onmouseup = function() {
             document.onmousemove = null;
-            localStorage.setItem(key, JSON.stringify({
-                left: el.offsetLeft, 
-                top: el.offsetTop, 
-                w: el.offsetWidth, 
-                h: el.offsetHeight
-            }));
+            savePos(el, key);
         };
     };
+
+    // 【新機能】手動でのリサイズ（右下ドラッグ）を監視して保存
+    const ro = new ResizeObserver(() => {
+        savePos(el, key);
+    });
+    ro.observe(el);
+
     el.onclick = () => { maxZ++; el.style.zIndex = maxZ; };
+}
+
+// 座標とサイズを一括保存するヘルパー
+function savePos(el, key) {
+    localStorage.setItem(key, JSON.stringify({
+        left: el.offsetLeft, 
+        top: el.offsetTop, 
+        w: el.offsetWidth, 
+        h: el.offsetHeight
+    }));
 }
 
 // --- 3. インポート機能 ---
@@ -132,7 +145,7 @@ function render() {
     if (!container) return;
     container.innerHTML = "";
 
-    // --- カテゴリBOXの描画 ---
+    // カテゴリBOXの描画
     Object.keys(links).forEach((cat, i) => {
         const box = document.createElement('div');
         box.className = 'widget';
@@ -150,13 +163,10 @@ function render() {
         addBtn.onmousedown = (e) => e.stopPropagation(); 
         addBtn.onclick = (e) => {
             e.stopPropagation();
-            const t = prompt("リンクの名前を入力してください:", "新しいサイト");
+            const t = prompt("リンクの名前を入力:", "新しいサイト");
             if (!t) return;
-            const u = prompt("URLを入力してください (https://...):", "https://");
-            if (!u || !u.startsWith('http')) {
-                alert("有効なURLを入力してください。");
-                return;
-            }
+            const u = prompt("URLを入力:", "https://");
+            if (!u || !u.startsWith('http')) { alert("有効なURLを入力してください。"); return; }
             if (!Array.isArray(links[cat])) links[cat] = [];
             links[cat].push({ title: t, url: u });
             saveLinks();
@@ -167,28 +177,7 @@ function render() {
         delBtn.onmousedown = (e) => e.stopPropagation();
         delBtn.onclick = (e) => {
             e.stopPropagation();
-            if(confirm(`カテゴリー「${cat}」を削除しますか？`)) {
-                delete links[cat];
-                saveLinks();
-                render();
-            }
-        };
-
-        box.ondragover = (e) => { e.preventDefault(); box.style.borderColor = "#00d2ff"; };
-        box.ondragleave = () => { box.style.borderColor = "rgba(255, 255, 255, 0.2)"; };
-        box.ondrop = (e) => {
-            e.preventDefault();
-            box.style.borderColor = "rgba(255, 255, 255, 0.2)";
-            const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
-            if (url && url.startsWith('http')) {
-                const newTitle = prompt("名前を入力:", "ドロップしたリンク");
-                if (newTitle) {
-                    if (!Array.isArray(links[cat])) links[cat] = [];
-                    links[cat].push({ title: newTitle, url: url });
-                    saveLinks(); 
-                    render();
-                }
-            }
+            if(confirm(`「${cat}」を削除しますか？`)) { delete links[cat]; saveLinks(); render(); }
         };
 
         const list = box.querySelector('.link-list');
@@ -205,7 +194,7 @@ function render() {
         makeWidget(box, safeKey, {left: 100 + i*340, top: 550, w: 300, h: 250});
     });
 
-    // --- 付箋の描画 (自動リサイズ対応) ---
+    // 付箋の描画
     notes.forEach((n, i) => {
         const nb = document.createElement('div');
         nb.className = 'widget';
@@ -218,43 +207,16 @@ function render() {
         
         const nt = nb.querySelector('.nt-input');
         const ni = nb.querySelector('.ni-textarea');
-
-        // 自動リサイズ用関数
-        const autoResize = () => {
-            ni.style.height = 'auto'; 
-            ni.style.height = ni.scrollHeight + 'px';
-            nb.style.height = (ni.scrollHeight + 50) + 'px'; 
-            // 座標とサイズを保存
-            localStorage.setItem(`pos_note_${i}`, JSON.stringify({
-                left: nb.offsetLeft, top: nb.offsetTop, 
-                w: nb.offsetWidth, h: nb.offsetHeight
-            }));
-        };
-
         nt.onmousedown = ni.onmousedown = (e) => e.stopPropagation();
-        
         nt.oninput = () => { notes[i].title = nt.value; saveNotes(); };
+        ni.oninput = () => { notes[i].body = ni.value; saveNotes(); };
         
-        ni.oninput = () => { 
-            notes[i].body = ni.value; 
-            saveNotes(); 
-            autoResize(); // 入力に合わせてサイズ変更
-        };
-        
-        const delNoteBtn = nb.querySelector('.cat-delete-btn');
-        delNoteBtn.onmousedown = (e) => e.stopPropagation();
-        delNoteBtn.onclick = (e) => {
+        nb.querySelector('.cat-delete-btn').onclick = (e) => {
             e.stopPropagation();
-            notes.splice(i, 1);
-            saveNotes();
-            render();
+            notes.splice(i, 1); saveNotes(); render();
         };
-        
         container.appendChild(nb);
         makeWidget(nb, `pos_note_${i}`, {left: 400 + i*50, top: 150 + i*50, w: 320, h: 280});
-        
-        // 初期描画時にもリサイズを実行
-        setTimeout(autoResize, 0);
     });
 }
 
@@ -262,10 +224,7 @@ function render() {
 document.getElementById('add-cat-btn').onclick = () => {
     const catalogKeys = Object.keys(bookmarkCatalog);
     let msg = "追加方法を選択してください：\n[0] 空のカテゴリ作成 (空のカテゴリを作成する場合「0」を入力してください)\n";
-    
-    catalogKeys.forEach((name, i) => {
-        msg += `[${i + 1}] ${name}\n`;
-    });
+    catalogKeys.forEach((name, i) => { msg += `[${i + 1}] ${name}\n`; });
     
     const choice = prompt(msg);
     if (choice === "0") {
@@ -276,26 +235,19 @@ document.getElementById('add-cat-btn').onclick = () => {
         const selected = catalogKeys[idx];
         if (selected) { 
             links[selected] = [...bookmarkCatalog[selected]]; 
-            saveLinks(); 
-            render(); 
+            saveLinks(); render(); 
         }
     }
 };
 
 document.getElementById('guide-btn').onclick = () => window.open(NOTE_URL, '_blank');
 document.getElementById('note-setup-btn').onclick = () => {
-    notes.push({title: "新規付箋", body: ""}); 
-    saveNotes(); 
-    render();
+    notes.push({title: "新規付箋", body: ""}); saveNotes(); render();
 };
 
 window.onload = function() { 
-    updateClock(); 
-    setInterval(updateClock, 1000);
-    render(); 
-    setupImportFeature(); 
+    updateClock(); setInterval(updateClock, 1000);
+    render(); setupImportFeature(); 
     const savedBg = localStorage.getItem('orbitTab_bg_v4');
-    if (savedBg) {
-        document.getElementById('bg-container').style.backgroundImage = `url(${savedBg})`;
-    }
+    if (savedBg) document.getElementById('bg-container').style.backgroundImage = `url(${savedBg})`;
 };
