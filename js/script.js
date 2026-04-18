@@ -1,9 +1,9 @@
 // ==========================================
 // 0. 初期設定 & 定数
 // ==========================================
-const DB_NAME = "OrbitTabDB"; [cite: 1]
-const STORE_NAME = "settings"; [cite: 1]
-const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153"; [cite: 1]
+const DB_NAME = "OrbitTabDB";
+const STORE_NAME = "settings";
+const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153";
 
 const DEFAULT_LINKS = {
     "Search & Mail": [
