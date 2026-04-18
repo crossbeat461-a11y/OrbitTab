@@ -1,43 +1,46 @@
-/* ==========================================
-   ベース設定（スクロール対応）
-   ========================================== */
 * { margin: 0; padding: 0; box-sizing: border-box; }
+
 body { 
     background: #000; 
     color: #fff; 
-    font-family: sans-serif; 
+    font-family: 'Segoe UI', sans-serif; 
     width: 100vw; 
     height: 100vh; 
-    overflow: hidden; /* body自体は固定 */
+    overflow: hidden; 
 }
 
+/* 背景を画面いっぱいに広げる設定 */
 #bg-container { 
-    position: fixed; width: 100%; height: 100%; z-index: -1; 
+    position: fixed; 
+    top: 0; left: 0;
+    width: 100%; 
+    height: 100%; 
+    z-index: -1; 
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: background-image 0.5s ease-in-out;
 }
 
-/* メインインターフェース：ここをスクロール可能にする */
 .main-interface { 
     position: relative; 
     width: 100vw; 
     height: 100vh; 
-    overflow-x: auto; /* 横スクロールを許可 */
-    overflow-y: auto; /* 縦スクロールを許可 */
+    overflow: auto; 
     z-index: 1;
-    scroll-behavior: smooth; /* スムーズに動くようにする */
 }
 
-/* ウィジェットの入れ物 */
 #widgets-container { 
     position: absolute; 
-    min-width: 200vw; /* 画面2つ分くらいの広さを確保 */
+    min-width: 200vw; 
     min-height: 200vh; 
 }
 
-/* ウィジェット本体 */
+/* ガラスのような質感のウィジェット */
 .widget { 
     position: absolute; 
-    background: rgba(255, 255, 255, 0.12); 
+    background: rgba(255, 255, 255, 0.1); 
     backdrop-filter: blur(15px); 
     border: 1px solid rgba(255, 255, 255, 0.2); 
     border-radius: 12px; 
@@ -46,19 +49,47 @@ body {
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
-.widget-header { padding: 10px; background: rgba(0, 0, 0, 0.3); display: flex; justify-content: space-between; cursor: move; }
-.widget-title { font-size: 12px; color: #00d2ff; font-weight: bold; }
+.widget-header { 
+    padding: 12px; 
+    background: rgba(0, 0, 0, 0.3); 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    cursor: move; 
+    border-radius: 12px 12px 0 0;
+}
+
+.widget-title { font-size: 13px; color: #00d2ff; font-weight: bold; }
+
 .link-list { flex: 1; padding: 10px; overflow-y: auto; }
-.link-wrapper { padding: 8px; margin-bottom: 4px; background: rgba(255,255,255,0.05); cursor: pointer; border-radius: 6px; }
+.link-wrapper { 
+    padding: 10px; 
+    margin-bottom: 5px; 
+    background: rgba(255,255,255,0.05); 
+    cursor: pointer; 
+    border-radius: 6px; 
+    transition: background 0.2s;
+}
+.link-wrapper:hover { background: rgba(255,255,255,0.15); }
 
-/* 時計（画面中央上部に固定） */
-.info-unit { position: sticky; top: 50px; text-align: center; pointer-events: none; z-index: 1000; }
-#clock { font-size: 80px; font-weight: 100; }
+.info-unit { position: sticky; top: 60px; text-align: center; pointer-events: none; z-index: 1000; }
+#clock { font-size: 100px; font-weight: 100; letter-spacing: -2px; }
+#date { font-size: 20px; opacity: 0.8; }
 
-/* ボタン類（画面右下に固定） */
-.bottom-controls { position: fixed; bottom: 30px; right: 30px; display: flex; gap: 10px; z-index: 2000; }
-.control-btn { width: 45px; height: 45px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; cursor: pointer; font-size: 18px; }
+.bottom-controls { position: fixed; bottom: 30px; right: 30px; display: flex; gap: 12px; z-index: 2000; }
+.control-btn { 
+    width: 50px; height: 50px; 
+    border-radius: 50%; 
+    border: 1px solid rgba(255,255,255,0.3); 
+    background: rgba(0, 0, 0, 0.5); 
+    color: #fff; 
+    cursor: pointer; 
+    font-size: 20px; 
+    transition: transform 0.2s, background 0.2s;
+}
+.control-btn:hover { transform: scale(1.1); background: rgba(0, 0, 0, 0.8); }
 
-.nt-input { background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.2); color: #fff; flex: 1; margin-right: 10px; }
-.ni-textarea { background: transparent; border: none; color: #fff; flex: 1; padding: 10px; resize: none; outline: none; }
-.resizer { width: 15px; height: 15px; position: absolute; right: 0; bottom: 0; cursor: nwse-resize; }
+.nt-input { background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.2); color: #fff; font-size: 14px; flex: 1; margin-right: 10px; }
+.ni-textarea { background: transparent; border: none; color: #fff; flex: 1; padding: 10px; resize: none; outline: none; font-size: 15px; line-height: 1.6; }
+.cat-delete-btn { cursor: pointer; opacity: 0.5; transition: opacity 0.2s; }
+.cat-delete-btn:hover { opacity: 1; }
