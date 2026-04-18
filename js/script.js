@@ -1,6 +1,6 @@
 /**
  * OrbitTab - デジタル管制塔 
- * js/script.js (Final Stable Version)
+ * js/script.js
  */
 
 const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153";
@@ -47,9 +47,7 @@ function makeWidget(el, key, def) {
 
     const header = el.querySelector('.widget-header');
     
-    // ヘッダーでのドラッグ開始処理
     header.onmousedown = function(e) {
-        // ボタン類や入力欄をクリックした場合はドラッグを開始しない（ここが重要）
         if (e.target.closest('.cat-btn') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
             return;
         }
@@ -134,7 +132,6 @@ function render() {
     if (!container) return;
     container.innerHTML = "";
 
-    // カテゴリBOXの描画
     Object.keys(links).forEach((cat, i) => {
         const box = document.createElement('div');
         box.className = 'widget';
@@ -148,9 +145,7 @@ function render() {
             </div>
             <div class="link-list"></div>`;
         
-        // --- ➕ボタン：単体リンク追加ロジック ---
         const addBtn = box.querySelector('.add-single-btn');
-        // mousedownを止めてドラッグ機能との衝突を防ぐ
         addBtn.onmousedown = (e) => e.stopPropagation(); 
         addBtn.onclick = (e) => {
             e.stopPropagation();
@@ -161,16 +156,12 @@ function render() {
                 alert("有効なURLを入力してください。");
                 return;
             }
-            
-            // 配列の存在を保証
             if (!Array.isArray(links[cat])) links[cat] = [];
-            
             links[cat].push({ title: t, url: u });
             saveLinks();
             render();
         };
 
-        // --- 🗑️ボタン：カテゴリ削除ロジック ---
         const delBtn = box.querySelector('.cat-delete-btn');
         delBtn.onmousedown = (e) => e.stopPropagation();
         delBtn.onclick = (e) => {
@@ -182,7 +173,6 @@ function render() {
             }
         };
 
-        // --- ドラッグ＆ドロップ対応 ---
         box.ondragover = (e) => { e.preventDefault(); box.style.borderColor = "#00d2ff"; };
         box.ondragleave = () => { box.style.borderColor = "rgba(255, 255, 255, 0.2)"; };
         box.ondrop = (e) => {
@@ -200,7 +190,6 @@ function render() {
             }
         };
 
-        // リンク一覧の表示
         const list = box.querySelector('.link-list');
         (links[cat] || []).forEach(item => {
             const row = document.createElement('div');
@@ -215,7 +204,6 @@ function render() {
         makeWidget(box, safeKey, {left: 100 + i*340, top: 550, w: 300, h: 250});
     });
 
-    // --- 付箋の描画 ---
     notes.forEach((n, i) => {
         const nb = document.createElement('div');
         nb.className = 'widget';
@@ -229,7 +217,6 @@ function render() {
         const nt = nb.querySelector('.nt-input');
         const ni = nb.querySelector('.ni-textarea');
         
-        // テキストエリア操作時にドラッグが始まらないようにする
         nt.onmousedown = ni.onmousedown = (e) => e.stopPropagation();
         nt.oninput = () => { notes[i].title = nt.value; saveNotes(); };
         ni.oninput = () => { notes[i].body = ni.value; saveNotes(); };
@@ -251,7 +238,10 @@ function render() {
 // --- 5. ボタンアクション (下部コントロール) ---
 document.getElementById('add-cat-btn').onclick = () => {
     const catalogKeys = Object.keys(bookmarkCatalog);
-    let msg = "追加方法を選択してください：\n[0] 空のカテゴリを作成\n";
+    
+    // 【修正箇所】メッセージに「0を入力してください」を追記
+    let msg = "追加方法を選択してください：\n[0] 空のカテゴリを作成（空のカテゴリを作成する場合0を入力してください）\n";
+    
     catalogKeys.forEach((name, i) => {
         msg += `[${i + 1}] ${name}\n`;
     });
@@ -264,7 +254,6 @@ document.getElementById('add-cat-btn').onclick = () => {
         const idx = parseInt(choice) - 1;
         const selected = catalogKeys[idx];
         if (selected) { 
-            // 参照を切るためにスプレッド演算子でコピー
             links[selected] = [...bookmarkCatalog[selected]]; 
             saveLinks(); 
             render(); 
