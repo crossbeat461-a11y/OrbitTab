@@ -1,6 +1,6 @@
 /**
  * OrbitTab - デジタル管制塔 
- * js/script.js
+ * js/script.js (安定版：➕ボタン動作確認済み)
  */
 
 const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153";
@@ -132,6 +132,7 @@ function render() {
     if (!container) return;
     container.innerHTML = "";
 
+    // カテゴリBOXの描画
     Object.keys(links).forEach((cat, i) => {
         const box = document.createElement('div');
         box.className = 'widget';
@@ -145,6 +146,7 @@ function render() {
             </div>
             <div class="link-list"></div>`;
         
+        // ➕ボタン：リンク追加
         const addBtn = box.querySelector('.add-single-btn');
         addBtn.onmousedown = (e) => e.stopPropagation(); 
         addBtn.onclick = (e) => {
@@ -162,6 +164,7 @@ function render() {
             render();
         };
 
+        // 🗑️ボタン：削除
         const delBtn = box.querySelector('.cat-delete-btn');
         delBtn.onmousedown = (e) => e.stopPropagation();
         delBtn.onclick = (e) => {
@@ -173,6 +176,7 @@ function render() {
             }
         };
 
+        // ドラッグ＆ドロップ対応
         box.ondragover = (e) => { e.preventDefault(); box.style.borderColor = "#00d2ff"; };
         box.ondragleave = () => { box.style.borderColor = "rgba(255, 255, 255, 0.2)"; };
         box.ondrop = (e) => {
@@ -204,6 +208,7 @@ function render() {
         makeWidget(box, safeKey, {left: 100 + i*340, top: 550, w: 300, h: 250});
     });
 
+    // 付箋の描画
     notes.forEach((n, i) => {
         const nb = document.createElement('div');
         nb.className = 'widget';
@@ -238,10 +243,7 @@ function render() {
 // --- 5. ボタンアクション (下部コントロール) ---
 document.getElementById('add-cat-btn').onclick = () => {
     const catalogKeys = Object.keys(bookmarkCatalog);
-    
-    // 【修正箇所】メッセージに「0を入力してください」を追記
-    let msg = "追加方法を選択してください：\n[0] 空のカテゴリを作成（空のカテゴリを作成する場合0を入力してください）\n";
-    
+    let msg = "追加方法を選択してください：\n[0] 空のカテゴリを作成\n";
     catalogKeys.forEach((name, i) => {
         msg += `[${i + 1}] ${name}\n`;
     });
