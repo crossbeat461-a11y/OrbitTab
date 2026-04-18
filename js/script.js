@@ -63,8 +63,9 @@ function makeWidget(el, key, def) {
 // 2. インポート機能
 // ==========================================
 const bookmarkInput = document.getElementById('bookmark-input');
+
 document.getElementById('import-bookmarks-btn').onclick = () => {
-    alert("【手順】\n1. Chromeのブックマークマネージャーで『エクスポート』を実行\n2. 保存されたHTMLファイルをこの後に選択してください。");
+    // alertを挟まず、すぐにクリックイベントを発火させる
     bookmarkInput.click();
 };
 
