@@ -124,6 +124,25 @@ function setupImportFeature() {
     };
 }
 
+// --- 背景画像関連 ---
+    const bgBtn = document.getElementById('bg-change-btn');
+    const bgInput = document.getElementById('bg-input');
+    if (bgBtn && bgInput) {
+        bgBtn.onclick = () => bgInput.click(); // 画像選択を開く
+        bgInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const url = ev.target.result;
+                document.getElementById('bg-container').style.backgroundImage = `url(${url})`;
+                localStorage.setItem('orbitTab_bg_v4', url); // 保存
+            };
+            reader.readAsDataURL(file);
+        };
+    }
+
+
 // ==========================================
 // 3. 描画 (render)
 // ==========================================
