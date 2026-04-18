@@ -17,6 +17,7 @@ let notes = getStored('orbitTab_notes_v4', DEFAULT_NOTE);
 let calUrl = localStorage.getItem('orbitTab_calUrl') || "";
 let maxZ = 100;
 
+// 時計
 function updateClock() {
     const clock = document.getElementById('clock');
     const date = document.getElementById('date');
@@ -27,8 +28,8 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 
+// ウィジェット機能
 function makeWidget(el, key, def) {
-    if (!el) return;
     const pos = getStored(key, def);
     el.style.left = pos.left + "px"; el.style.top = pos.top + "px";
     el.style.width = pos.w + "px"; el.style.height = pos.h + "px";
@@ -50,6 +51,7 @@ function makeWidget(el, key, def) {
     };
 }
 
+// 描画
 function render() {
     const container = document.getElementById('widgets-container');
     if (!container) return;
@@ -59,18 +61,17 @@ function render() {
         const box = document.createElement('div');
         box.className = 'widget';
         box.innerHTML = '<div class="widget-header"><span class="widget-title">' + cat + '</span><span class="cat-delete-btn">🗑️</span></div><div class="link-list"></div>';
-        box.querySelector('.cat-delete-btn').onclick = function() { if(confirm("削除しますか？")){ delete links[cat]; localStorage.setItem('orbitTab_v1_links', JSON.stringify(links)); render(); } };
+        box.querySelector('.cat-delete-btn').onclick = function() { if(confirm("削除？")){ delete links[cat]; localStorage.setItem('orbitTab_v1_links', JSON.stringify(links)); render(); } };
         const list = box.querySelector('.link-list');
         links[cat].forEach(function(item, idx) {
             const row = document.createElement('div');
             row.className = 'link-wrapper';
-            row.innerHTML = '<span class="link-title">' + item.title + '</span><span class="delete-btn">&times;</span>';
-            row.querySelector('.link-title').onclick = function() { window.open(item.url, '_blank'); };
-            row.querySelector('.delete-btn').onclick = function() { links[cat].splice(idx, 1); localStorage.setItem('orbitTab_v1_links', JSON.stringify(links)); render(); };
+            row.innerHTML = '<span>' + item.title + '</span>';
+            row.onclick = function() { window.open(item.url, '_blank'); };
             list.appendChild(row);
         });
         container.appendChild(box);
-        makeWidget(box, "pos_cat_" + cat.replace(/\s/g, '_'), {left: 100 + i*340, top: 550, w: 320, h: 250});
+        makeWidget(box, "pos_cat_" + cat.replace(/\s+/g, '_'), {left: 100 + i*340, top: 550, w: 300, h: 250});
     });
 
     notes.forEach(function(n, i) {
@@ -81,26 +82,25 @@ function render() {
         nb.querySelector('.ni-textarea').oninput = function(e) { notes[i].body = e.target.value; localStorage.setItem('orbitTab_notes_v4', JSON.stringify(notes)); };
         nb.querySelector('.cat-delete-btn').onclick = function() { notes.splice(i, 1); localStorage.setItem('orbitTab_notes_v4', JSON.stringify(notes)); render(); };
         container.appendChild(nb);
-        makeWidget(nb, "pos_note_" + i, {left: 680 + i*30, top: 250 + i*30, w: 300, h: 250});
+        makeWidget(nb, "pos_note_" + i, {left: 450 + i*30, top: 150 + i*30, w: 300, h: 250});
     });
-
-    if (calUrl) {
-        const cb = document.createElement('div');
-        cb.className = 'widget';
-        cb.innerHTML = '<div class="widget-header"><span class="widget-title">Calendar</span><span class="cat-delete-btn">🗑️</span></div><iframe src="' + calUrl + '" class="calendar-iframe"></iframe>';
-        cb.querySelector('.cat-delete-btn').onclick = function() { calUrl = ""; localStorage.removeItem('orbitTab_calUrl'); render(); };
-        container.appendChild(cb);
-        makeWidget(cb, "pos_cal", {left: 100, top: 200, w: 500, h: 400});
-    }
 }
 
+// キーボード操作（矢印キーでスクロール）
+window.addEventListener('keydown', function(e) {
+    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return; // 入力中は無効
+    const step = 50; // スクロール量
+    const main = document.querySelector('.main-interface');
+    if (e.key === 'ArrowRight') main.scrollLeft += step;
+    if (e.key === 'ArrowLeft') main.scrollLeft -= step;
+    if (e.key === 'ArrowDown') main.scrollTop += step;
+    if (e.key === 'ArrowUp') main.scrollTop -= step;
+});
+
+// ボタン
 document.getElementById('guide-btn').onclick = function() { window.open(NOTE_URL, '_blank'); };
 document.getElementById('add-cat-btn').onclick = function() { const n = prompt("カテゴリ名:"); if(n) { links[n] = []; localStorage.setItem('orbitTab_v1_links', JSON.stringify(links)); render(); } };
 document.getElementById('note-setup-btn').onclick = function() { if(notes.length < 4) { notes.push({title: "タスク", body: ""}); localStorage.setItem('orbitTab_notes_v4', JSON.stringify(notes)); render(); } };
-document.getElementById('cal-setup-btn').onclick = function() { const u = prompt("カレンダーURL:"); if(u) { calUrl = u; localStorage.setItem('orbitTab_calUrl', u); render(); } };
+document.getElementById('cal-setup-btn').onclick = function() { const u = prompt("カレンダーURL:"); if(u) { localStorage.setItem('orbitTab_calUrl', u); location.reload(); } };
 
-window.onload = function() {
-    updateClock();
-    render();
-    document.getElementById('bg-container').style.opacity = 1;
-};
+window.onload = function() { updateClock(); render(); };
