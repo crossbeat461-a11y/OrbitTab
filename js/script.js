@@ -10,79 +10,79 @@ const DEFAULT_LINKS = {
         { title: "Google", url: "https://www.google.com" },
         { title: "Gmail", url: "https://mail.google.com" }
     ]
-}; [cite: 2]
+};
 
-const DEFAULT_NOTE_DATA = { title: "タスク", body: "🚀 OrbitTab へようこそ！" }; [cite: 3]
-const DEFAULT_BG_STYLE = "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)"; [cite: 3]
+const DEFAULT_NOTE_DATA = { title: "タスク", body: "🚀 OrbitTab へようこそ！" };
+const DEFAULT_BG_STYLE = "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)";
 
-let maxZIndex = 100; [cite: 5]
+let maxZIndex = 100;
 
 // ==========================================
 // 1. ユーティリティ & データ管理
 // ==========================================
 function getSafeStorage(key, defaultValue) {
     try {
-        const item = localStorage.getItem(key); [cite: 5]
-        return item === null ? defaultValue : JSON.parse(item); [cite: 6]
+        const item = localStorage.getItem(key);
+        return item === null ? defaultValue : JSON.parse(item);
     } catch (e) { return defaultValue; }
 }
 
-let links = getSafeStorage('orbitTab_v1_links', DEFAULT_LINKS); [cite: 16]
-let calUrl = localStorage.getItem('orbitTab_calUrl') || ""; [cite: 16]
-let notes = getSafeStorage('orbitTab_notes_v4', [DEFAULT_NOTE_DATA]); // 複数付箋対応
+let links = getSafeStorage('orbitTab_v1_links', DEFAULT_LINKS);
+let calUrl = localStorage.getItem('orbitTab_calUrl') || "";
+let notes = getSafeStorage('orbitTab_notes_v4', [DEFAULT_NOTE_DATA]);
 
 function updateClock() {
-    const clockEl = document.getElementById('clock'); [cite: 7]
-    const dateEl = document.getElementById('date'); [cite: 7]
+    const clockEl = document.getElementById('clock');
+    const dateEl = document.getElementById('date');
     if (!clockEl || !dateEl) return;
-    const now = new Date(); [cite: 7]
-    clockEl.innerText = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`; [cite: 8]
-    dateEl.innerText = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }); [cite: 8]
+    const now = new Date();
+    clockEl.innerText = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    dateEl.innerText = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 }
-setInterval(updateClock, 1000); [cite: 8]
-updateClock(); [cite: 8]
+setInterval(updateClock, 1000);
+updateClock();
 
 // ==========================================
 // 2. 背景画像管理 (IndexedDB)
 // ==========================================
 function openDB() {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, 2); [cite: 9]
+        const request = indexedDB.open(DB_NAME, 2);
         request.onupgradeneeded = e => {
-            if (!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME); [cite: 9]
+            if (!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME);
         };
-        request.onsuccess = e => resolve(e.target.result); [cite: 9]
-        request.onerror = e => reject(e.target.error); [cite: 9]
+        request.onsuccess = e => resolve(e.target.result);
+        request.onerror = e => reject(e.target.error);
     });
 }
 
 async function loadBackground() {
-    const bg = document.getElementById('bg-container'); [cite: 11]
+    const bg = document.getElementById('bg-container');
     if (!bg) return;
     try {
-        const db = await openDB(); [cite: 11]
-        const request = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).get("background"); [cite: 11]
+        const db = await openDB();
+        const request = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).get("background");
         request.onsuccess = () => {
             if (request.result) {
-                bg.style.backgroundImage = `url(${request.result})`; [cite: 12]
+                bg.style.backgroundImage = `url(${request.result})`;
             } else {
-                bg.style.background = DEFAULT_BG_STYLE; [cite: 12]
+                bg.style.background = DEFAULT_BG_STYLE;
             }
-            setTimeout(() => { bg.style.opacity = 1; }, 50); [cite: 12]
+            setTimeout(() => { bg.style.opacity = 1; }, 50);
         };
     } catch (err) {
-        bg.style.background = DEFAULT_BG_STYLE; [cite: 13]
-        bg.style.opacity = 1; [cite: 13]
+        bg.style.background = DEFAULT_BG_STYLE;
+        bg.style.opacity = 1;
     }
 }
 
 // ==========================================
-// 3. ウィジェット機能 (ドラッグ & リサイズ)
+// 3. ウィジェット機能
 // ==========================================
 function makeWidget(el, storageKey, defaultLayout) {
     if (!el) return;
-    let isDragging = false, isResizing = false; [cite: 14]
-    let startX, startY, startW, startH, startLeft, startTop; [cite: 14]
+    let isDragging = false, isResizing = false;
+    let startX, startY, startW, startH, startLeft, startTop;
 
     const saved = getSafeStorage(storageKey, defaultLayout);
     el.style.left = saved.left + 'px';
@@ -140,24 +140,23 @@ function makeWidget(el, storageKey, defaultLayout) {
 }
 
 function bringToFront(el) {
-    maxZIndex++; [cite: 15]
-    el.style.zIndex = maxZIndex; [cite: 15]
+    maxZIndex++;
+    el.style.zIndex = maxZIndex;
 }
 
 // ==========================================
-// 4. レンダリング管理
+// 4. レンダリング
 // ==========================================
 function saveAndRender() {
-    localStorage.setItem('orbitTab_v1_links', JSON.stringify(links)); [cite: 17]
-    renderBoard(); [cite: 17]
+    localStorage.setItem('orbitTab_v1_links', JSON.stringify(links));
+    renderBoard();
 }
 
 function renderBoard() {
-    const container = document.getElementById('widgets-container'); [cite: 18]
+    const container = document.getElementById('widgets-container');
     if (!container) return;
     container.innerHTML = ""; 
 
-    // カテゴリBOX描画
     Object.keys(links).forEach((cat, index) => {
         const box = document.createElement('div');
         box.className = 'widget category-box';
@@ -181,10 +180,9 @@ function renderBoard() {
             listDiv.appendChild(wrap);
         });
         container.appendChild(box);
-        makeWidget(box, `layout_cat_${cat}`, { left: 100 + (index*340), top: 700, w: 320, h: 300 });
+        makeWidget(box, `layout_cat_${cat}`, { left: 100 + (index*340), top: 600, w: 320, h: 250 });
     });
 
-    // 付箋の描画 (複数対応 & 見出し機能)
     notes.forEach((data, idx) => {
         const note = document.createElement('div');
         note.className = 'widget note-box';
@@ -215,7 +213,6 @@ function renderBoard() {
         };
     });
 
-    // カレンダー
     if (calUrl) {
         const cal = document.createElement('div');
         cal.className = 'widget';
@@ -229,47 +226,40 @@ function renderBoard() {
 }
 
 // ==========================================
-// 5. ボタンアクション
+// 5. 起動
 // ==========================================
-document.getElementById('guide-btn').onclick = () => window.open(NOTE_URL, '_blank'); [cite: 19]
-
+document.getElementById('guide-btn').onclick = () => window.open(NOTE_URL, '_blank');
 document.getElementById('add-cat-btn').onclick = () => {
-    const n = prompt("新しいカテゴリー名:"); [cite: 19]
-    if (n && n.trim()) {
-        const name = n.trim(); [cite: 20]
-        if (!links[name]) { links[name] = []; saveAndRender(); } [cite: 20]
-    }
+    const n = prompt("新しいカテゴリー名:");
+    if (n && n.trim()) { if (!links[n]) { links[n] = []; saveAndRender(); } }
 };
-
 document.getElementById('cal-setup-btn').onclick = () => {
-    const u = prompt("GoogleカレンダーのURL（srcの中身）:"); [cite: 21]
-    if (u) { calUrl = u; localStorage.setItem('orbitTab_calUrl', u); renderBoard(); } [cite: 21]
+    const u = prompt("GoogleカレンダーのURL:");
+    if (u) { calUrl = u; localStorage.setItem('orbitTab_calUrl', u); renderBoard(); }
 };
-
 document.getElementById('note-setup-btn').onclick = () => {
     if (notes.length >= 4) return alert("付箋は最大4つまでです。");
     notes.push({ title: "タスク", body: "" });
     localStorage.setItem('orbitTab_notes_v4', JSON.stringify(notes));
     renderBoard();
 };
-
-const bgInput = document.getElementById('bg-input'); [cite: 21]
-document.getElementById('bg-change-btn').onclick = () => bgInput.click(); [cite: 21]
+const bgInput = document.getElementById('bg-input');
+document.getElementById('bg-change-btn').onclick = () => bgInput.click();
 bgInput.onchange = e => {
-    const f = e.target.files[0]; [cite: 21]
+    const f = e.target.files[0];
     if (f) {
-        const r = new FileReader(); [cite: 21]
+        const r = new FileReader();
         r.onload = async ev => {
-            const data = ev.target.result; [cite: 21]
-            document.getElementById('bg-container').style.backgroundImage = `url(${data})`; [cite: 21]
-            const db = await openDB(); [cite: 21]
-            db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(data, "background"); [cite: 21]
+            const data = ev.target.result;
+            document.getElementById('bg-container').style.backgroundImage = `url(${data})`;
+            const db = await openDB();
+            db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(data, "background");
         };
-        r.readAsDataURL(f); [cite: 21]
+        r.readAsDataURL(f);
     }
 };
 
 window.addEventListener('DOMContentLoaded', () => {
-    loadBackground(); [cite: 22]
-    renderBoard(); [cite: 22]
+    loadBackground();
+    renderBoard();
 });
