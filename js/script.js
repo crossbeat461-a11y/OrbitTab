@@ -1,8 +1,11 @@
 const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153";
 const DEFAULT_LINKS = {
-    "Search & Mail": [
-        { title: "Google", url: "https://www.google.com" },
-        { title: "Gmail", url: "https://mail.google.com" }
+    "クイックアクセス": [
+        { title: "Google 検索", url: "https://www.google.com" },
+        { title: "YouTube", url: "https://www.youtube.com" }
+    ],
+    "OrbitTab ガイド": [
+        { title: "使いこなしガイド (note)", url: NOTE_URL }
     ]
 };
 const DEFAULT_NOTE = [{ title: "タスク", body: "🚀 OrbitTabへようこそ！" }];
