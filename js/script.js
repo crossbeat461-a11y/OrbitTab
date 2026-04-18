@@ -1,12 +1,14 @@
 /**
  * OrbitTab - デジタル管制塔 
- * js/script.js (安定版：➕ボタン動作確認済み)
+ * js/script.js (クイックガイド修正版)
  */
 
 const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153";
+
+// 1. 最初にある付箋の内容を修正 (手順4を追加)
 const DEFAULT_NOTE = [{ 
     title: "🚀 OrbitTab クイックガイド", 
-    body: "1. 右下の【📥】をクリックして、PCに保存したブックマークHTMLを読み込みます。\n\n2. 次に【＋】をクリックすると、読み込んだフォルダがリストで表示されます。\n\n3. 番号を入力して、自分だけのカテゴリBOXを完成させましょう！"
+    body: "1. 右下の【📥】をクリックして、PCに保存したブックマークHTMLを読み込みます。\n\n2. 次に【＋】をクリックすると、読み込んだフォルダがリストで表示されます。\n\n3. 番号を入力して、自分だけのカテゴリBOXを完成させましょう！\n\n4. 新しく空のカテゴリを作る場合は「0」を入力してください。"
 }];
 
 // --- データの取得と保存 ---
@@ -37,7 +39,7 @@ function updateClock() {
     date.innerText = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 }
 
-// --- 2. ウィジェット制御 (ドラッグ & 座標保存) ---
+// --- 2. ウィジェット制御 ---
 function makeWidget(el, key, def) {
     const pos = getStored(key, def);
     el.style.left = pos.left + "px"; 
@@ -51,7 +53,6 @@ function makeWidget(el, key, def) {
         if (e.target.closest('.cat-btn') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
             return;
         }
-        
         maxZ++; 
         el.style.zIndex = maxZ;
         let startX = e.clientX - el.offsetLeft;
@@ -75,7 +76,7 @@ function makeWidget(el, key, def) {
     el.onclick = () => { maxZ++; el.style.zIndex = maxZ; };
 }
 
-// --- 3. インポート機能 (ブックマーク & 背景) ---
+// --- 3. インポート機能 ---
 function setupImportFeature() {
     const importBtn = document.getElementById('import-bookmarks-btn');
     const bookmarkInput = document.getElementById('bookmark-input');
@@ -132,7 +133,6 @@ function render() {
     if (!container) return;
     container.innerHTML = "";
 
-    // カテゴリBOXの描画
     Object.keys(links).forEach((cat, i) => {
         const box = document.createElement('div');
         box.className = 'widget';
@@ -146,7 +146,6 @@ function render() {
             </div>
             <div class="link-list"></div>`;
         
-        // ➕ボタン：リンク追加
         const addBtn = box.querySelector('.add-single-btn');
         addBtn.onmousedown = (e) => e.stopPropagation(); 
         addBtn.onclick = (e) => {
@@ -164,7 +163,6 @@ function render() {
             render();
         };
 
-        // 🗑️ボタン：削除
         const delBtn = box.querySelector('.cat-delete-btn');
         delBtn.onmousedown = (e) => e.stopPropagation();
         delBtn.onclick = (e) => {
@@ -176,7 +174,6 @@ function render() {
             }
         };
 
-        // ドラッグ＆ドロップ対応
         box.ondragover = (e) => { e.preventDefault(); box.style.borderColor = "#00d2ff"; };
         box.ondragleave = () => { box.style.borderColor = "rgba(255, 255, 255, 0.2)"; };
         box.ondrop = (e) => {
@@ -208,7 +205,6 @@ function render() {
         makeWidget(box, safeKey, {left: 100 + i*340, top: 550, w: 300, h: 250});
     });
 
-    // 付箋の描画
     notes.forEach((n, i) => {
         const nb = document.createElement('div');
         nb.className = 'widget';
@@ -221,7 +217,6 @@ function render() {
         
         const nt = nb.querySelector('.nt-input');
         const ni = nb.querySelector('.ni-textarea');
-        
         nt.onmousedown = ni.onmousedown = (e) => e.stopPropagation();
         nt.oninput = () => { notes[i].title = nt.value; saveNotes(); };
         ni.oninput = () => { notes[i].body = ni.value; saveNotes(); };
@@ -234,16 +229,18 @@ function render() {
             saveNotes();
             render();
         };
-        
         container.appendChild(nb);
         makeWidget(nb, `pos_note_${i}`, {left: 400 + i*50, top: 150 + i*50, w: 320, h: 280});
     });
 }
 
-// --- 5. ボタンアクション (下部コントロール) ---
+// --- 5. ボタンアクション ---
 document.getElementById('add-cat-btn').onclick = () => {
     const catalogKeys = Object.keys(bookmarkCatalog);
-    let msg = "追加方法を選択してください：\n[0] 空のカテゴリを作成\n";
+    
+    // 2. メッセージに「0を入力」の案内を追加
+    let msg = "追加方法を選択してください：\n[0] 空のカテゴリ作成 (空のカテゴリを作成する場合「0」を入力してください)\n";
+    
     catalogKeys.forEach((name, i) => {
         msg += `[${i + 1}] ${name}\n`;
     });
@@ -264,20 +261,17 @@ document.getElementById('add-cat-btn').onclick = () => {
 };
 
 document.getElementById('guide-btn').onclick = () => window.open(NOTE_URL, '_blank');
-
 document.getElementById('note-setup-btn').onclick = () => {
     notes.push({title: "新規付箋", body: ""}); 
     saveNotes(); 
     render();
 };
 
-// --- 初期化 ---
 window.onload = function() { 
     updateClock(); 
     setInterval(updateClock, 1000);
     render(); 
     setupImportFeature(); 
-    
     const savedBg = localStorage.getItem('orbitTab_bg_v4');
     if (savedBg) {
         document.getElementById('bg-container').style.backgroundImage = `url(${savedBg})`;
