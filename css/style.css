@@ -47,6 +47,19 @@ body {
     display: flex; 
     flex-direction: column; 
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    
+    /* --- 追加：手動リサイズを有効にする --- */
+    resize: both;          /* 縦横両方のリサイズを許可 */
+    overflow: hidden;      /* 右下のつまみを出すために必要 */
+    min-width: 200px;      /* 小さくなりすぎないように */
+    min-height: 100px;
+}
+
+/* リンク一覧も付箋の中身も、親のサイズに追従させる */
+.link-list, .ni-textarea {
+    flex: 1;
+    width: 100%;
+    height: 100%;
 }
 
 .widget-header { 
