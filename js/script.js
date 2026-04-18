@@ -60,74 +60,44 @@ function makeWidget(el, key, def) {
 }
 
 // ==========================================
-// 2. インポート機能
+// 2. インポート機能（修正版）
 // ==========================================
-const bookmarkInput = document.getElementById('bookmark-input');
+// ボタンの紐付けを関数化して、確実に動作するようにします
+function setupImportFeature() {
+    const importBtn = document.getElementById('import-bookmarks-btn');
+    const bookmarkInput = document.getElementById('bookmark-input');
 
-document.getElementById('import-bookmarks-btn').onclick = () => {
-    // alertを挟まず、すぐにクリックイベントを発火させる
-    bookmarkInput.click();
-};
+    if (!importBtn || !bookmarkInput) return;
 
-bookmarkInput.onchange = function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(ev.target.result, 'text/html');
-        const folders = doc.querySelectorAll('h3');
-        if (folders.length === 0) {
-            alert("ブックマークが見つかりませんでした。HTML形式か確認してください。");
-            return;
-        }
-        bookmarkCatalog = {};
-        folders.forEach(folder => {
-            const name = folder.textContent;
-            const linksInFolder = [];
-            const linkNodes = folder.parentElement.querySelectorAll('a');
-            linkNodes.forEach(a => linksInFolder.push({ title: a.textContent, url: a.href }));
-            bookmarkCatalog[name] = linksInFolder;
-        });
-        alert("読み込み完了！\n『＋』ボタンを押すと、ブックマークから好きなフォルダを選んで追加できます。");
+    importBtn.onclick = () => {
+        bookmarkInput.click();
     };
-    reader.readAsText(file);
-};
 
-// ==========================================
-// 3. 描画 & カテゴリ追加
-// ==========================================
-function render() {
-    const container = document.getElementById('widgets-container');
-    if (!container) return;
-    container.innerHTML = "";
-
-    // カテゴリBOX
-    Object.keys(links).forEach(function(cat, i) {
-        const box = document.createElement('div');
-        box.className = 'widget';
-        box.innerHTML = '<div class="widget-header"><span class="widget-title">' + cat + '</span><span class="cat-delete-btn">🗑️</span></div><div class="link-list"></div>';
-        
-        box.querySelector('.cat-delete-btn').onclick = function(e) {
-            e.stopPropagation();
-            if(confirm("カテゴリー「" + cat + "」を削除しますか？")) {
-                delete links[cat];
-                saveLinks();
-                render();
+    bookmarkInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(ev.target.result, 'text/html');
+            const folders = doc.querySelectorAll('h3');
+            if (folders.length === 0) {
+                alert("ブックマークが見つかりませんでした。HTML形式か確認してください。");
+                return;
             }
+            bookmarkCatalog = {};
+            folders.forEach(folder => {
+                const name = folder.textContent;
+                const linksInFolder = [];
+                const linkNodes = folder.parentElement.querySelectorAll('a');
+                linkNodes.forEach(a => linksInFolder.push({ title: a.textContent, url: a.href }));
+                bookmarkCatalog[name] = linksInFolder;
+            });
+            alert("読み込み完了！\n『＋』ボタンを押すと、ブックマークから好きなフォルダを選んで追加できます。");
         };
-
-        const list = box.querySelector('.link-list');
-        (links[cat] || []).forEach(function(item, idx) {
-            const row = document.createElement('div');
-            row.className = 'link-wrapper';
-            row.innerHTML = '<span>' + item.title + '</span>';
-            row.onclick = function() { window.open(item.url, '_blank'); };
-            list.appendChild(row);
-        });
-        container.appendChild(box);
-        makeWidget(box, "pos_cat_" + cat.replace(/\s+/g, '_'), {left: 100 + i*340, top: 550, w: 300, h: 250});
-    });
+        reader.readAsText(file);
+    };
+}
 
     // 付箋
     notes.forEach(function(n, i) {
@@ -151,7 +121,6 @@ function render() {
         container.appendChild(nb);
         makeWidget(nb, "pos_note_" + i, {left: 450 + i*30, top: 150 + i*30, w: 300, h: 250});
     });
-}
 
 // ＋ボタンの挙動：カタログがあれば選択、なければ新規
 document.getElementById('add-cat-btn').onclick = () => {
@@ -197,4 +166,8 @@ document.getElementById('cal-setup-btn').onclick = () => {
     if(u) { localStorage.setItem('orbitTab_calUrl', u); location.reload(); }
 };
 
-window.onload = function() { updateClock(); render(); };
+window.onload = function() { 
+    updateClock(); 
+    render(); 
+    setupImportFeature(); // これを追加！
+};
