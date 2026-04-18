@@ -52,7 +52,7 @@ function makeWidget(el, key, def) {
     el.onclick = () => { maxZ++; el.style.zIndex = maxZ; };
 }
 
-// --- 3. インポート機能 (ブックマーク & 背景) ---
+// --- 3. インポート機能 ---
 function setupImportFeature() {
     const importBtn = document.getElementById('import-bookmarks-btn');
     const bookmarkInput = document.getElementById('bookmark-input');
@@ -105,8 +105,7 @@ function setupImportFeature() {
     }
 }
 
-// --- 4. 描画処理 ---
-// の render 関数
+// --- 4. 描画処理 (修正済：重複削除 & D&D対応) ---
 function render() {
     const container = document.getElementById('widgets-container');
     if (!container) return;
@@ -116,41 +115,32 @@ function render() {
     Object.keys(links).forEach((cat, i) => {
         const box = document.createElement('div');
         box.className = 'widget';
-        // HTML構造はそのまま
         box.innerHTML = `<div class="widget-header"><span class="widget-title">${cat}</span><span class="cat-delete-btn">🗑️</span></div><div class="link-list"></div>`;
         
-        // --- 【追加】ドラッグ＆ドロップでリンクを受け取る機能 ---
+        // --- ドラッグ＆ドロップ機能 ---
         box.ondragover = (e) => {
             e.preventDefault(); 
-            box.style.borderColor = "#00d2ff"; // 重なった時に枠を光らせる
+            box.style.borderColor = "#00d2ff";
             box.style.boxShadow = "0 0 20px rgba(0, 210, 255, 0.5)";
         };
-
         box.ondragleave = () => {
-            box.style.borderColor = "rgba(255, 255, 255, 0.2)"; // 離れたら戻す
+            box.style.borderColor = "rgba(255, 255, 255, 0.2)";
             box.style.boxShadow = "0 10px 40px rgba(0, 0, 0, 0.5)";
         };
-
         box.ondrop = (e) => {
             e.preventDefault();
             box.style.borderColor = "rgba(255, 255, 255, 0.2)";
-            
-            // ドロップされたデータからURLを取得
             const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
-            
             if (url && url.startsWith('http')) {
                 const newTitle = prompt("新しいリンクの名前を入力してください:", "新しいリンク");
                 if (newTitle) {
                     if (!links[cat]) links[cat] = [];
                     links[cat].push({ title: newTitle, url: url });
                     saveLinks();
-                    render(); // 再描画して反映
+                    render();
                 }
-            } else {
-                alert("有効なURLではありません。");
             }
         };
-        // --- 追加ここまで ---
 
         box.querySelector('.cat-delete-btn').onclick = (e) => {
             e.stopPropagation();
@@ -158,7 +148,7 @@ function render() {
         };
 
         const list = box.querySelector('.link-list');
-        links[cat].forEach(item => {
+        (links[cat] || []).forEach(item => {
             const row = document.createElement('div');
             row.className = 'link-wrapper';
             row.innerHTML = `<span>${item.title}</span>`;
@@ -168,27 +158,6 @@ function render() {
         container.appendChild(box);
         makeWidget(box, `pos_cat_${cat}`, {left: 100 + i*340, top: 550, w: 300, h: 250});
     });
-
-    // 付箋の描画（ここは変更なし）
-    notes.forEach((n, i) => {
-        const nb = document.createElement('div');
-        nb.className = 'widget';
-        nb.innerHTML = `<div class="widget-header"><input type="text" class="nt-input" value="${n.title}"><span class="cat-delete-btn">🗑️</span></div><textarea class="ni-textarea">${n.body}</textarea>`;
-        
-        const nt = nb.querySelector('.nt-input');
-        const ni = nb.querySelector('.ni-textarea');
-        nt.onmousedown = ni.onmousedown = (e) => e.stopPropagation();
-        nt.oninput = () => { notes[i].title = nt.value; saveNotes(); };
-        ni.oninput = () => { notes[i].body = ni.value; saveNotes(); };
-        
-        nb.querySelector('.cat-delete-btn').onclick = (e) => {
-            e.stopPropagation();
-            notes.splice(i, 1); saveNotes(); render();
-        };
-        container.appendChild(nb);
-        makeWidget(nb, `pos_note_${i}`, {left: 400 + i*50, top: 150 + i*50, w: 320, h: 280});
-    });
-}
 
     // 付箋の描画
     notes.forEach((n, i) => {
