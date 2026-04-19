@@ -106,3 +106,54 @@ body {
 .ni-textarea { background: transparent; border: none; color: #fff; flex: 1; padding: 10px; resize: none; outline: none; font-size: 15px; line-height: 1.6; }
 .cat-delete-btn { cursor: pointer; opacity: 0.5; transition: opacity 0.2s; }
 .cat-delete-btn:hover { opacity: 1; }
+/* --- ツールチップの実装 --- */
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]::before {
+    content: attr(data-tooltip); /* HTMLのdata-tooltip属性の文字を表示 */
+    position: absolute;
+    bottom: 125%; /* ボタンの上に配置 */
+    left: 50%;
+    transform: translateX(-50%) scale(0.8);
+    padding: 6px 12px;
+    background: rgba(0, 210, 255, 0.9); /* OrbitTabカラーの青 */
+    color: #fff;
+    font-size: 12px;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    pointer-events: none;
+    z-index: 3000;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* マウスが乗った時にふわっと表示 */
+[data-tooltip]:hover::before {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) scale(1);
+}
+
+/* 吹き出しの三角部分 */
+[data-tooltip]::after {
+    content: "";
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(0, 210, 255, 0.9);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    pointer-events: none;
+}
+
+[data-tooltip]:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
