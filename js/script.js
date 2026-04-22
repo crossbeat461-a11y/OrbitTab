@@ -285,15 +285,59 @@ function setupButtonActions() {
         }
     };
 
-    // 【AIアシスタント (✨)】
+// --- 【AIアシスタント (✨)】 ---
     document.getElementById('ai-btn').onclick = () => {
-        const choice = prompt("AIを選択：\n[1] Gemini\n[2] ChatGPT\n[3] Claude", "1");
-        const urls = { 
-            "1": "https://gemini.google.com/app", 
-            "2": "https://chatgpt.com/", 
-            "3": "https://claude.ai/" 
-        };
-        if (urls[choice]) openSidePanel(urls[choice]);
+        // 保存されたURLを取得
+        let lastAi = localStorage.getItem('orbitTab_last_ai');
+        
+        // 初回、またはURLがない場合は選択させる
+        if (!lastAi) {
+            const choice = prompt("デフォルトのAIを選択（次回から自動で開きます）：\n[1] Gemini\n[2] ChatGPT\n[3] Claude", "1");
+            const urls = { 
+                "1": "https://gemini.google.com/app", 
+                "2": "https://chatgpt.com/", 
+                "3": "https://claude.ai/" 
+            };
+            if (urls[choice]) {
+                lastAi = urls[choice];
+                localStorage.setItem('orbitTab_last_ai', lastAi);
+            }
+        }
+        
+        if (lastAi) openSidePanel(lastAi);
+    };
+
+    // AIボタンを右クリック（または長押し）でリセットできるようにする
+    document.getElementById('ai-btn').oncontextmenu = (e) => {
+        e.preventDefault();
+        localStorage.removeItem('orbitTab_last_ai');
+        alert("AIの選択をリセットしました。次に押す時に再設定できます。");
+    };
+
+    // --- 【ワークスペース (💼)】 ---
+    document.getElementById('ws-btn').onclick = () => {
+        let lastWs = localStorage.getItem('orbitTab_last_ws');
+        
+        if (!lastWs) {
+            const choice = prompt("デフォルトのツールを選択：\n[1] Notion\n[2] Slack", "1");
+            const urls = { 
+                "1": "https://www.notion.so/", 
+                "2": "https://app.slack.com/client/" 
+            };
+            if (urls[choice]) {
+                lastWs = urls[choice];
+                localStorage.setItem('orbitTab_last_ws', lastWs);
+            }
+        }
+        
+        if (lastWs) openSidePanel(lastWs);
+    };
+
+    // ワークスペースボタンを右クリックでリセット
+    document.getElementById('ws-btn').oncontextmenu = (e) => {
+        e.preventDefault();
+        localStorage.removeItem('orbitTab_last_ws');
+        alert("ツールの選択をリセットしました。");
     };
 
     // 【ワークスペース (💼)】
