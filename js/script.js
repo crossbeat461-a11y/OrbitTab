@@ -290,3 +290,16 @@ window.onload = function() {
     const savedBg = localStorage.getItem('orbitTab_bg_v4');
     if (savedBg) document.getElementById('bg-container').style.backgroundImage = `url(${savedBg})`;
 };
+// script.js の最後の方に追加(Gemini呼び出し)
+document.getElementById('ai-btn').addEventListener('click', () => {
+    // 現在のウィンドウでサイドパネルを開き、Geminiを表示
+    if (typeof chrome !== 'undefined' && chrome.sidePanel) {
+        chrome.sidePanel.setOptions({
+            path: 'https://gemini.google.com/app',
+            enabled: true
+        });
+        // 注意：サイドパネルをスクリプトから直接「開く」には、
+        // ユーザーのクリックアクション内である必要があります。
+        alert("右上の拡張機能アイコンから『OrbitTab』を右クリックして『サイドパネルを開く』を選択するか、Geminiボタンを有効にしました。");
+    }
+});
