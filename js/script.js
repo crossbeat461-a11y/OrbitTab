@@ -1,6 +1,6 @@
 /**
  * OrbitTab - デジタル管制塔 
- * js/script.js (v1.3.0: Gemini統合 & リンク個別削除)
+ * js/script.js (v1.3.0: AI 3種 & Workspace 2種 統合版)
  */
 
 const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153";
@@ -135,7 +135,18 @@ function setupImportFeature() {
     }
 }
 
-// --- 4. 描画処理 ---
+// --- 4. 共通サイドパネル起動関数 ---
+function openSidePanel(url) {
+    if (typeof chrome !== 'undefined' && chrome.sidePanel) {
+        chrome.sidePanel.setOptions({ path: url, enabled: true });
+        chrome.sidePanel.open({ windowId: chrome.windows.WINDOW_ID_CURRENT })
+            .catch(() => window.open(url, '_blank'));
+    } else {
+        window.open(url, '_blank');
+    }
+}
+
+// --- 5. 描画処理 ---
 function render() {
     const container = document.getElementById('widgets-container');
     if (!container) return;
@@ -202,15 +213,14 @@ function render() {
         (links[cat] || []).forEach((item, linkIdx) => {
             const row = document.createElement('div');
             row.className = 'link-wrapper';
-            row.style.position = 'relative'; // 個別削除ボタンの基準
+            row.style.position = 'relative';
             row.innerHTML = `<span>${item.title}</span>`;
             row.onclick = () => window.open(item.url, '_blank');
 
-            // --- ★ 1.3.0 追加：個別削除ボタン ---
+            // 個別削除ボタン
             const singleDelBtn = document.createElement('span');
             singleDelBtn.className = 'delete-link-btn';
             singleDelBtn.innerHTML = '×';
-            singleDelBtn.title = 'リンクを削除';
             singleDelBtn.onclick = (e) => {
                 e.stopPropagation();
                 if(confirm(`「${item.title}」を削除しますか？`)) {
@@ -254,9 +264,9 @@ function render() {
     });
 }
 
-// --- 5. ボタンアクション初期化 ---
+// --- 6. ボタンアクション設定 ---
 function setupButtonActions() {
-    // カテゴリ追加
+    // 【カテゴリ追加】
     document.getElementById('add-cat-btn').onclick = () => {
         const catalogKeys = Object.keys(bookmarkCatalog);
         let msg = "追加方法を選択してください：\n[0] 空のカテゴリ作成\n";
@@ -275,47 +285,42 @@ function setupButtonActions() {
         }
     };
 
-    // ガイド
+    // 【AIアシスタント (✨)】
+    document.getElementById('ai-btn').onclick = () => {
+        const choice = prompt("AIを選択：\n[1] Gemini\n[2] ChatGPT\n[3] Claude", "1");
+        const urls = { 
+            "1": "https://gemini.google.com/app", 
+            "2": "https://chatgpt.com/", 
+            "3": "https://claude.ai/" 
+        };
+        if (urls[choice]) openSidePanel(urls[choice]);
+    };
+
+    // 【ワークスペース (💼)】
+    document.getElementById('ws-btn').onclick = () => {
+        const choice = prompt("ツールを選択：\n[1] Notion\n[2] Slack", "1");
+        const urls = { 
+            "1": "https://www.notion.so/", 
+            "2": "https://app.slack.com/client/" 
+        };
+        if (urls[choice]) openSidePanel(urls[choice]);
+    };
+
+    // 【その他ボタン】
     document.getElementById('guide-btn').onclick = () => window.open(NOTE_URL, '_blank');
-    
-    // カレンダー
     document.getElementById('cal-setup-btn').onclick = () => window.open('https://calendar.google.com/', '_blank');
-    
-    // 付箋追加
     document.getElementById('note-setup-btn').onclick = () => {
         notes.push({title: "新規付箋", body: ""}); saveNotes(); render();
     };
-
-    // Geminiサイドパネル
-    const aiBtn = document.getElementById('ai-btn');
-if (aiBtn) {
-        aiBtn.onclick = () => {
-            if (typeof chrome !== 'undefined' && chrome.sidePanel) {
-                // 1. まずパネルを有効にする
-                chrome.sidePanel.setOptions({
-                    path: 'https://gemini.google.com/app',
-                    enabled: true
-                });
-                
-                // 2. ★ここが重要：サイドパネルを「今すぐ」開く命令
-                chrome.sidePanel.open({ windowId: chrome.windows.WINDOW_ID_CURRENT })
-                    .catch((error) => console.error(error));
-                
-                // 3. (オプション) 念のためのアラートは消してもOK
-            } else {
-                window.open('https://gemini.google.com/app', '_blank');
-            }
-        };
-    }
 }
 
-// --- 6. 初期起動 ---
+// --- 初期化 ---
 window.onload = function() { 
     updateClock(); 
     setInterval(updateClock, 1000);
     render(); 
     setupImportFeature(); 
-    setupButtonActions(); // まとめて設定
+    setupButtonActions();
     
     const savedBg = localStorage.getItem('orbitTab_bg_v4');
     if (savedBg) document.getElementById('bg-container').style.backgroundImage = `url(${savedBg})`;
