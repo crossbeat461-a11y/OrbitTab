@@ -288,14 +288,20 @@ function setupButtonActions() {
 
     // Geminiサイドパネル
     const aiBtn = document.getElementById('ai-btn');
-    if (aiBtn) {
+if (aiBtn) {
         aiBtn.onclick = () => {
             if (typeof chrome !== 'undefined' && chrome.sidePanel) {
+                // 1. まずパネルを有効にする
                 chrome.sidePanel.setOptions({
                     path: 'https://gemini.google.com/app',
                     enabled: true
                 });
-                alert("Geminiサイドパネルを準備しました！\n\n【開き方】\n右上のOrbitTabアイコンを「右クリック」して『サイドパネルを開く』を選択してください。");
+                
+                // 2. ★ここが重要：サイドパネルを「今すぐ」開く命令
+                chrome.sidePanel.open({ windowId: chrome.windows.WINDOW_ID_CURRENT })
+                    .catch((error) => console.error(error));
+                
+                // 3. (オプション) 念のためのアラートは消してもOK
             } else {
                 window.open('https://gemini.google.com/app', '_blank');
             }
