@@ -1,6 +1,6 @@
 /**
  * OrbitTab - デジタル管制塔 
- * js/script.js (手動リサイズ保存 & ドラッグ&ドロップ追加機能)
+ * js/script.js (v1.3.0: Gemini統合 & リンク個別削除)
  */
 
 const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153";
@@ -48,7 +48,7 @@ function makeWidget(el, key, def) {
     const header = el.querySelector('.widget-header');
     
     header.onmousedown = function(e) {
-        if (e.target.closest('.cat-btn') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        if (e.target.closest('.cat-btn') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.closest('.delete-link-btn')) {
             return;
         }
         maxZ++; 
@@ -155,7 +155,6 @@ function render() {
             </div>
             <div class="link-list"></div>`;
         
-        // --- 手動追加 ---
         box.querySelector('.add-single-btn').onclick = (e) => {
             e.stopPropagation();
             const t = prompt("リンクの名前を入力:", "新しいサイト");
@@ -168,10 +167,9 @@ function render() {
             render();
         };
 
-        // --- 【新機能】ドラッグ&ドロップでリンクを追加 ---
         box.ondragover = (e) => {
             e.preventDefault();
-            box.style.borderColor = "#00d2ff"; // 重なった時に色を変える
+            box.style.borderColor = "#00d2ff";
             box.style.boxShadow = "0 0 20px rgba(0, 210, 255, 0.5)";
         };
         box.ondragleave = () => {
@@ -201,11 +199,27 @@ function render() {
         };
 
         const list = box.querySelector('.link-list');
-        (links[cat] || []).forEach(item => {
+        (links[cat] || []).forEach((item, linkIdx) => {
             const row = document.createElement('div');
             row.className = 'link-wrapper';
+            row.style.position = 'relative'; // 個別削除ボタンの基準
             row.innerHTML = `<span>${item.title}</span>`;
             row.onclick = () => window.open(item.url, '_blank');
+
+            // --- ★ 1.3.0 追加：個別削除ボタン ---
+            const singleDelBtn = document.createElement('span');
+            singleDelBtn.className = 'delete-link-btn';
+            singleDelBtn.innerHTML = '×';
+            singleDelBtn.title = 'リンクを削除';
+            singleDelBtn.onclick = (e) => {
+                e.stopPropagation();
+                if(confirm(`「${item.title}」を削除しますか？`)) {
+                    links[cat].splice(linkIdx, 1);
+                    saveLinks();
+                    render();
+                }
+            };
+            row.appendChild(singleDelBtn);
             list.appendChild(row);
         });
 
@@ -240,66 +254,63 @@ function render() {
     });
 }
 
-// --- 5. ボタンアクション ---
-// カテゴリ追加ボタン
-document.getElementById('add-cat-btn').onclick = () => {
-    const catalogKeys = Object.keys(bookmarkCatalog);
-    let msg = "追加方法を選択してください：\n[0] 空のカテゴリ作成 (空のカテゴリを作成する場合「0」を入力してください)\n";
-    catalogKeys.forEach((name, i) => { msg += `[${i + 1}] ${name}\n`; });
-    
-    const choice = prompt(msg);
-    if (choice === "0") {
-        const n = prompt("新しいカテゴリ名を入力:");
-        if (n) { links[n] = []; saveLinks(); render(); }
-    } else if (choice) {
-        const idx = parseInt(choice) - 1;
-        const selected = catalogKeys[idx];
-        if (selected) { 
-            links[selected] = [...bookmarkCatalog[selected]]; 
-            saveLinks(); render(); 
+// --- 5. ボタンアクション初期化 ---
+function setupButtonActions() {
+    // カテゴリ追加
+    document.getElementById('add-cat-btn').onclick = () => {
+        const catalogKeys = Object.keys(bookmarkCatalog);
+        let msg = "追加方法を選択してください：\n[0] 空のカテゴリ作成\n";
+        catalogKeys.forEach((name, i) => { msg += `[${i + 1}] ${name}\n`; });
+        const choice = prompt(msg);
+        if (choice === "0") {
+            const n = prompt("新しいカテゴリ名を入力:");
+            if (n) { links[n] = []; saveLinks(); render(); }
+        } else if (choice) {
+            const idx = parseInt(choice) - 1;
+            const selected = catalogKeys[idx];
+            if (selected) { 
+                links[selected] = [...bookmarkCatalog[selected]]; 
+                saveLinks(); render(); 
+            }
         }
+    };
+
+    // ガイド
+    document.getElementById('guide-btn').onclick = () => window.open(NOTE_URL, '_blank');
+    
+    // カレンダー
+    document.getElementById('cal-setup-btn').onclick = () => window.open('https://calendar.google.com/', '_blank');
+    
+    // 付箋追加
+    document.getElementById('note-setup-btn').onclick = () => {
+        notes.push({title: "新規付箋", body: ""}); saveNotes(); render();
+    };
+
+    // Geminiサイドパネル
+    const aiBtn = document.getElementById('ai-btn');
+    if (aiBtn) {
+        aiBtn.onclick = () => {
+            if (typeof chrome !== 'undefined' && chrome.sidePanel) {
+                chrome.sidePanel.setOptions({
+                    path: 'https://gemini.google.com/app',
+                    enabled: true
+                });
+                alert("Geminiサイドパネルを準備しました！\n\n【開き方】\n右上のOrbitTabアイコンを「右クリック」して『サイドパネルを開く』を選択してください。");
+            } else {
+                window.open('https://gemini.google.com/app', '_blank');
+            }
+        };
     }
-};
+}
 
-// ガイドボタン (noteを開く)
-document.getElementById('guide-btn').onclick = () => window.open(NOTE_URL, '_blank');
-
-// 【修正箇所】カレンダーボタン (Googleカレンダーを開く)
-document.getElementById('cal-setup-btn').onclick = () => window.open('https://calendar.google.com/', '_blank');
-
-// 付箋追加ボタン
-document.getElementById('note-setup-btn').onclick = () => {
-    notes.push({title: "新規付箋", body: ""}); saveNotes(); render();
-};
-
-// 初期化処理
+// --- 6. 初期起動 ---
 window.onload = function() { 
-    updateClock(); setInterval(updateClock, 1000);
-    render(); setupImportFeature(); 
+    updateClock(); 
+    setInterval(updateClock, 1000);
+    render(); 
+    setupImportFeature(); 
+    setupButtonActions(); // まとめて設定
+    
     const savedBg = localStorage.getItem('orbitTab_bg_v4');
     if (savedBg) document.getElementById('bg-container').style.backgroundImage = `url(${savedBg})`;
 };
-document.getElementById('guide-btn').onclick = () => window.open(NOTE_URL, '_blank');
-document.getElementById('note-setup-btn').onclick = () => {
-    notes.push({title: "新規付箋", body: ""}); saveNotes(); render();
-};
-
-window.onload = function() { 
-    updateClock(); setInterval(updateClock, 1000);
-    render(); setupImportFeature(); 
-    const savedBg = localStorage.getItem('orbitTab_bg_v4');
-    if (savedBg) document.getElementById('bg-container').style.backgroundImage = `url(${savedBg})`;
-};
-// script.js の最後の方に追加(Gemini呼び出し)
-document.getElementById('ai-btn').addEventListener('click', () => {
-    // 現在のウィンドウでサイドパネルを開き、Geminiを表示
-    if (typeof chrome !== 'undefined' && chrome.sidePanel) {
-        chrome.sidePanel.setOptions({
-            path: 'https://gemini.google.com/app',
-            enabled: true
-        });
-        // 注意：サイドパネルをスクリプトから直接「開く」には、
-        // ユーザーのクリックアクション内である必要があります。
-        alert("右上の拡張機能アイコンから『OrbitTab』を右クリックして『サイドパネルを開く』を選択するか、Geminiボタンを有効にしました。");
-    }
-});
