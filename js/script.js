@@ -1,6 +1,6 @@
 /**
  * OrbitTab - デジタル管制塔 
- * js/script.js (v1.3.0: AI 3種 & Workspace 2種 統合版)
+ * js/script.js (v1.3.0: AI・Workspace記憶機能 & 内部マニュアル統合版)
  */
 
 const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153";
@@ -285,12 +285,9 @@ function setupButtonActions() {
         }
     };
 
-// --- 【AIアシスタント (✨)】 ---
+    // --- 【AIアシスタント (✨)】 ---
     document.getElementById('ai-btn').onclick = () => {
-        // 保存されたURLを取得
         let lastAi = localStorage.getItem('orbitTab_last_ai');
-        
-        // 初回、またはURLがない場合は選択させる
         if (!lastAi) {
             const choice = prompt("デフォルトのAIを選択（次回から自動で開きます）：\n[1] Gemini\n[2] ChatGPT\n[3] Claude", "1");
             const urls = { 
@@ -303,11 +300,9 @@ function setupButtonActions() {
                 localStorage.setItem('orbitTab_last_ai', lastAi);
             }
         }
-        
         if (lastAi) openSidePanel(lastAi);
     };
 
-    // AIボタンを右クリック（または長押し）でリセットできるようにする
     document.getElementById('ai-btn').oncontextmenu = (e) => {
         e.preventDefault();
         localStorage.removeItem('orbitTab_last_ai');
@@ -317,7 +312,6 @@ function setupButtonActions() {
     // --- 【ワークスペース (💼)】 ---
     document.getElementById('ws-btn').onclick = () => {
         let lastWs = localStorage.getItem('orbitTab_last_ws');
-        
         if (!lastWs) {
             const choice = prompt("デフォルトのツールを選択：\n[1] Notion\n[2] Slack", "1");
             const urls = { 
@@ -329,29 +323,22 @@ function setupButtonActions() {
                 localStorage.setItem('orbitTab_last_ws', lastWs);
             }
         }
-        
         if (lastWs) openSidePanel(lastWs);
     };
 
-    // ワークスペースボタンを右クリックでリセット
     document.getElementById('ws-btn').oncontextmenu = (e) => {
         e.preventDefault();
         localStorage.removeItem('orbitTab_last_ws');
         alert("ツールの選択をリセットしました。");
     };
 
-    // 【ワークスペース (💼)】
-    document.getElementById('ws-btn').onclick = () => {
-        const choice = prompt("ツールを選択：\n[1] Notion\n[2] Slack", "1");
-        const urls = { 
-            "1": "https://www.notion.so/", 
-            "2": "https://app.slack.com/client/" 
-        };
-        if (urls[choice]) openSidePanel(urls[choice]);
+    // --- 【使い方ガイド (📖)】 ---
+    document.getElementById('guide-btn').onclick = () => {
+        const url = chrome.runtime.getURL('guide.html');
+        window.open(url, '_blank');
     };
 
-    // 【その他ボタン】
-    document.getElementById('guide-btn').onclick = () => window.open(NOTE_URL, '_blank');
+    // --- 【その他ボタン】 ---
     document.getElementById('cal-setup-btn').onclick = () => window.open('https://calendar.google.com/', '_blank');
     document.getElementById('note-setup-btn').onclick = () => {
         notes.push({title: "新規付箋", body: ""}); saveNotes(); render();
