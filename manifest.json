@@ -1,13 +1,19 @@
 {
   "manifest_version": 3,
   "name": "OrbitTab - デジタル管制塔",
-  "version": "1.3.0", 
+  "version": "1.3.0",
+  "description": "自分専用のコクピット。ブックマーク管理、AI、ワークスペースを一つに。",
   "permissions": [
     "storage",
-    "sidePanel" 
+    "sidePanel",
+    "tabs"
   ],
   "host_permissions": [
-    "https://gemini.google.com/*"
+    "https://gemini.google.com/*",
+    "https://chatgpt.com/*",
+    "https://claude.ai/*",
+    "https://www.notion.so/*",
+    "https://app.slack.com/*"
   ],
   "side_panel": {
     "default_path": "index.html"
