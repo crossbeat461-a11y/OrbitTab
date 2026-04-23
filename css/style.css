@@ -112,28 +112,51 @@ body {
 }
 .link-item:hover .delete-link-btn { opacity: 1; }
 
-/* --- 6. 付箋（メモ）専用 --- */
-.ni-textarea { 
-    background: transparent; 
-    border: none; 
-    color: #cbd5e1; 
-    flex: 1; 
-    padding: 18px; 
-    resize: none; 
-    outline: none; 
-    font-size: 15px; 
-    line-height: 1.7; 
-}
+/* --- 6. 付箋・入力関連 (美化アップデート版) --- */
 
-.nt-input { 
-    background: transparent; 
-    border: none; 
-    color: #fff; 
+/* カテゴリBOXのタイトルと付箋のタイトル入力欄 */
+.nt-input, .widget-header input[type="text"] {
+    background: rgba(255, 255, 255, 0.05); /* ほんの少しだけ明るくして入力箇所と認識させる */
+    border: 1px solid rgba(255, 255, 255, 0.1); /* 繊細な枠線 */
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
     font-weight: bold;
-    font-size: 14px; 
-    flex: 1;
+    padding: 4px 8px;
+    outline: none;
+    transition: background 0.3s;
 }
 
+.nt-input:focus, .widget-header input[type="text"]:focus {
+    background: rgba(255, 255, 255, 0.15); /* クリックした時だけ少し明るく */
+    border-color: rgba(0, 210, 255, 0.5); /* OrbitTabブルーで光らせる */
+}
+
+/* 付箋（メモ）の本文テキストエリア */
+.ni-textarea, textarea {
+    background: transparent; /* 背景を完全に透明にしてガラス質感を活かす */
+    border: none;
+    color: #eee;
+    flex: 1;
+    padding: 15px;
+    resize: none;
+    outline: none;
+    font-size: 15px;
+    line-height: 1.7;
+    width: 100%;
+    height: 100%;
+    scrollbar-width: thin; /* スクロールバーを細く */
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+/* スクロールバーのカスタマイズ (Chrome用) */
+.ni-textarea::-webkit-scrollbar, .link-list::-webkit-scrollbar {
+    width: 6px;
+}
+.ni-textarea::-webkit-scrollbar-thumb, .link-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
 /* --- 7. 下部コントロール --- */
 .bottom-controls { position: fixed; bottom: 40px; right: 40px; display: flex; gap: 15px; z-index: 2000; }
 .control-btn { 
