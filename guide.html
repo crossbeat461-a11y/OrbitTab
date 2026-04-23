@@ -8,7 +8,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.8;
             color: #eee;
-            /* 背景画像をメイン画面と共有。画像がない場合は宇宙色 */
+            /* 背景設定 */
             background-color: #090a0f;
             background-size: cover;
             background-position: center;
@@ -21,12 +21,12 @@
             align-items: center;
         }
 
-        /* コンテンツを包むメイン容器を半透明に */
+        /* メインの半透明コンテナ */
         .main-container {
             max-width: 800px;
             width: 100%;
-            background: rgba(0, 0, 0, 0.6); /* 黒の半透明 */
-            backdrop-filter: blur(15px);   /* 背後をぼかす（重要！） */
+            background: rgba(0, 0, 0, 0.7); /* 少し暗めの半透明 */
+            backdrop-filter: blur(15px);   /* 背後をぼかす（グラスモーフィズム） */
             -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
@@ -43,11 +43,6 @@
             padding: 20px;
             border-radius: 12px;
             margin-bottom: 20px;
-            transition: transform 0.3s ease;
-        }
-        .feature-card:hover {
-            background: rgba(255, 255, 255, 0.08);
-            transform: translateY(-2px);
         }
 
         .icon { font-size: 1.2em; margin-right: 12px; }
@@ -71,37 +66,30 @@
         }
     </style>
 </head>
-<body>
-    <h1>🚀 OrbitTab 完全活用ガイド</h1>
-    <p style="text-align: center;">自分専用のデジタル管制塔へようこそ。このガイドでは主要な機能の使い方を解説します。</p>
+<body id="guide-body">
+    <div class="main-container">
+        <h1>🚀 OrbitTab 完全活用ガイド</h1>
 
-    <div class="feature-card">
-        <h2><span class="icon">✨</span>AIアシスタント</h2>
-        <p>Gemini, ChatGPT, Claudeからお好みのAIを1つ選んでサイドパネルに固定できます。<br>
-        ・初回クリック時に選択すると、次回からは<b>ワンクリック</b>で起動します。<br>
-        ・AIの種類を変更したい場合は、ボタンを<b>右クリック</b>してください。</p>
+        <div class="feature-card">
+            <h2><span class="icon">✨</span>AIアシスタント</h2>
+            <p>Gemini, ChatGPT, Claudeをワンクリックで起動。初回に選択したAIを記憶します。<b>右クリック</b>でAIの種類を変更可能です。</p>
+        </div>
+
+        <div class="feature-card">
+            <h2><span class="icon">💼</span>ワークスペース</h2>
+            <p>NotionやSlackをサイドパネルで開きます。<b>右クリック</b>でツールの設定をリセットできます。</p>
+        </div>
+
+        <div class="feature-card">
+            <h2><span class="icon">🗑️</span>リンクの個別整理</h2>
+            <p>カテゴリ内のリンクにマウスを重ねると表示される<b>赤い「×」</b>で、不要なリンクを個別に削除できます。</p>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="#" id="close-btn" class="back-link">← このタブを閉じて戻る</a>
+        </div>
     </div>
 
-    <div class="feature-card">
-        <h2><span class="icon">💼</span>ワークスペース</h2>
-        <p>NotionやSlackをサイドパネルで開きます。メイン画面で作業をしながら、横でメモや連絡が取れる最強の効率化ツールです。<br>
-        ・初回にツールを選択して記憶させます。<b>右クリック</b>で設定をリセットできます。</p>
-    </div>
-
-    <div class="feature-card">
-        <h2><span class="icon">🗑️</span>リンクの個別整理</h2>
-        <p>カテゴリBOXの中の特定のリンクだけを消したいときは、そのリンクの上にマウスを重ねてください。<br>
-        右側に表示される<b>赤い「×」ボタン</b>を押すと、そのリンクだけを削除できます。</p>
-    </div>
-
-    <div class="feature-card">
-        <h2><span class="icon">📥</span>ブックマークのインポート</h2>
-        <p>ブラウザからエクスポートしたブックマークHTMLを読み込むと、フォルダごとに整理された状態で取り込めます。<br>
-        右下の「＋」ボタンから、取り込んだカテゴリをBOXとして配置しましょう。</p>
-    </div>
-
-    <a href="#" id="close-btn" class="back-link">← このタブを閉じて戻る</a>
     <script src="js/guide-script.js"></script>
-</body>
 </body>
 </html>
