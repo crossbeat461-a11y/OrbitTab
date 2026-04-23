@@ -1,6 +1,6 @@
 /**
  * OrbitTab - デジタル管制塔 
- * js/script.js (v1.3.0: AI・Workspace記憶機能 & 内部マニュアル統合版)
+ * js/script.js (v1.3.1: 安定版)
  */
 
 const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153";
@@ -152,7 +152,6 @@ function render() {
     if (!container) return;
     container.innerHTML = "";
 
-    // カテゴリBOXの描画
     Object.keys(links).forEach((cat, i) => {
         const box = document.createElement('div');
         box.className = 'widget';
@@ -178,32 +177,7 @@ function render() {
             render();
         };
 
-        box.ondragover = (e) => {
-            e.preventDefault();
-            box.style.borderColor = "#00d2ff";
-            box.style.boxShadow = "0 0 20px rgba(0, 210, 255, 0.5)";
-        };
-        box.ondragleave = () => {
-            box.style.borderColor = "rgba(255, 255, 255, 0.2)";
-            box.style.boxShadow = "0 10px 40px rgba(0, 0, 0, 0.5)";
-        };
-        box.ondrop = (e) => {
-            e.preventDefault();
-            box.style.borderColor = "rgba(255, 255, 255, 0.2)";
-            const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
-            if (url && url.startsWith('http')) {
-                const newTitle = prompt("名前を入力:", "ドロップしたリンク");
-                if (newTitle) {
-                    if (!Array.isArray(links[cat])) links[cat] = [];
-                    links[cat].push({ title: newTitle, url: url });
-                    saveLinks(); 
-                    render();
-                }
-            }
-        };
-
         const delBtn = box.querySelector('.cat-delete-btn');
-        delBtn.onmousedown = (e) => e.stopPropagation();
         delBtn.onclick = (e) => {
             e.stopPropagation();
             if(confirm(`「${cat}」を削除しますか？`)) { delete links[cat]; saveLinks(); render(); }
@@ -212,16 +186,11 @@ function render() {
         const list = box.querySelector('.link-list');
         (links[cat] || []).forEach((item, linkIdx) => {
             const row = document.createElement('div');
-            row.className = 'link-wrapper';
-            row.style.position = 'relative';
-            row.innerHTML = `<span>${item.title}</span>`;
+            row.className = 'link-wrapper link-item'; // CSSのhoverを有効にするためにlink-itemを追加
+            row.innerHTML = `<span>${item.title}</span><span class="delete-link-btn">×</span>`;
             row.onclick = () => window.open(item.url, '_blank');
 
-            // 個別削除ボタン
-            const singleDelBtn = document.createElement('span');
-            singleDelBtn.className = 'delete-link-btn';
-            singleDelBtn.innerHTML = '×';
-            singleDelBtn.onclick = (e) => {
+            row.querySelector('.delete-link-btn').onclick = (e) => {
                 e.stopPropagation();
                 if(confirm(`「${item.title}」を削除しますか？`)) {
                     links[cat].splice(linkIdx, 1);
@@ -229,7 +198,6 @@ function render() {
                     render();
                 }
             };
-            row.appendChild(singleDelBtn);
             list.appendChild(row);
         });
 
@@ -238,7 +206,6 @@ function render() {
         makeWidget(box, safeKey, {left: 100 + i*340, top: 550, w: 300, h: 250});
     });
 
-    // 付箋の描画
     notes.forEach((n, i) => {
         const nb = document.createElement('div');
         nb.className = 'widget';
@@ -306,13 +273,7 @@ function setupButtonActions() {
     document.getElementById('ai-btn').oncontextmenu = (e) => {
         e.preventDefault();
         localStorage.removeItem('orbitTab_last_ai');
-        alert("AIの選択をリセットしました。次に押す時に再設定できます。");
-    };
-
-    document.getElementById('ws-btn').oncontextmenu = (e) => {
-        e.preventDefault();
-        localStorage.removeItem('orbitTab_last_ws');
-        alert("ツールの選択をリセットしました。");
+        alert("AIの選択をリセットしました。");
     };
 
     // --- 【使い方ガイド (📖)】 ---
@@ -321,10 +282,16 @@ function setupButtonActions() {
         window.open(url, '_blank');
     };
 
-    // --- 【その他ボタン】 ---
-    document.getElementById('cal-setup-btn').onclick = () => window.open('https://calendar.google.com/', '_blank');
+    // --- 【カレンダー (📅)】 ---
+    document.getElementById('cal-setup-btn').onclick = () => {
+        window.open('https://calendar.google.com/', '_blank');
+    };
+
+    // --- 【付箋追加 (📝)】 ---
     document.getElementById('note-setup-btn').onclick = () => {
-        notes.push({title: "新規付箋", body: ""}); saveNotes(); render();
+        notes.push({title: "新規付箋", body: ""}); 
+        saveNotes(); 
+        render();
     };
 }
 
