@@ -162,34 +162,37 @@ textarea {
     color: #000;
 }
 
-/* --- 8. 中央時計 (視認性向上アップデート版) --- */
+/* --- 8. 中央時計 (究極の視認性 & 美観アップデート版) --- */
 .info-unit { 
     position: sticky; 
-    top: 100px; /* 少し下に下げてバランスを調整 */
+    top: 100px; 
     text-align: center; 
     pointer-events: none; 
     z-index: 1000; 
 }
 
 #clock { 
-    font-size: 140px; /* 少し大きく */
-    font-weight: 300; /* ほんの少しだけ太くして存在感を出す */
+    font-size: 140px; 
+    font-weight: 300; 
     color: #ffffff; 
-    /* 強力な多重シャドウで、明るい背景でも確実に浮き立たせる */
+    /* 深い影と光の拡散を組み合わせて、文字を物理的に浮かせます */
     text-shadow: 
-        0 4px 15px rgba(0, 0, 0, 0.5), 
-        0 0 40px rgba(0, 0, 0, 0.3);
+        0 8px 20px rgba(0, 0, 0, 0.6), 
+        0 0 60px rgba(0, 0, 0, 0.4);
     letter-spacing: -2px;
 }
 
 #date { 
-    font-size: 26px; /* 少し大きく */
-    color: #00d2ff; 
-    font-weight: 500;
-    margin-top: -15px; 
-    /* 日付にも影をつけて読みやすく */
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
-    letter-spacing: 0.1em;
+    font-size: 28px; 
+    font-weight: 400;
+    color: #ffffff; /* 水色から白に変更して、より洗練された印象に */
+    margin-top: -10px; 
+    letter-spacing: 0.15em;
+    /* 日付にも共通の影を適用 */
+    text-shadow: 
+        0 4px 10px rgba(0, 0, 0, 0.7),
+        0 0 20px rgba(0, 0, 0, 0.3);
+    opacity: 0.95;
 }
 /* --- 9. ツールチップ (ボタン上部に横向きで表示) --- */
 [data-tooltip] {
