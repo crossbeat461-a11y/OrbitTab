@@ -8,24 +8,67 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.8;
             color: #eee;
-            background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 40px;
+            /* 背景画像をメイン画面と共有。画像がない場合は宇宙色 */
+            background-color: #090a0f;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        h1 { color: #00d2ff; border-bottom: 2px solid #00d2ff; padding-bottom: 10px; text-align: center; }
-        h2 { color: #00d2ff; margin-top: 40px; display: flex; align-items: center; }
+
+        /* コンテンツを包むメイン容器を半透明に */
+        .main-container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.6); /* 黒の半透明 */
+            backdrop-filter: blur(15px);   /* 背後をぼかす（重要！） */
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        h1 { color: #00d2ff; border-bottom: 2px solid #00d2ff; padding-bottom: 15px; text-align: center; margin-top: 0; }
+        h2 { color: #00d2ff; margin-top: 30px; display: flex; align-items: center; font-size: 1.4em; }
+        
         .feature-card {
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 20px;
             border-radius: 12px;
             margin-bottom: 20px;
+            transition: transform 0.3s ease;
         }
-        .icon { font-size: 1.4em; margin-right: 15px; }
+        .feature-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .icon { font-size: 1.2em; margin-right: 12px; }
         b { color: #00d2ff; }
-        .back-link { display: inline-block; margin-top: 50px; color: #888; text-decoration: none; border: 1px solid #444; padding: 10px 20px; border-radius: 5px; transition: 0.3s; }
-        .back-link:hover { color: #fff; border-color: #fff; }
+        
+        .back-link { 
+            display: inline-block; 
+            margin-top: 30px; 
+            color: #00d2ff; 
+            text-decoration: none; 
+            border: 1px solid #00d2ff; 
+            padding: 10px 25px; 
+            border-radius: 30px; 
+            transition: 0.3s;
+            background: rgba(0, 210, 255, 0.1);
+        }
+        .back-link:hover { 
+            background: #00d2ff; 
+            color: #000; 
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
+        }
     </style>
 </head>
 <body>
