@@ -4,30 +4,180 @@
     <meta charset="UTF-8">
     <title>OrbitTab 完全網羅ガイド</title>
     <style>
-        body { font-family: sans-serif; background: #090a0f; color: #eee; padding: 40px; line-height: 1.6; }
-        .container { max-width: 800px; margin: auto; background: rgba(255,255,255,0.05); padding: 30px; border-radius: 20px; backdrop-filter: blur(10px); }
-        h1, h2 { color: #00d2ff; }
-        .card { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        .back-btn { display: block; text-align: center; color: #00d2ff; text-decoration: none; border: 1px solid #00d2ff; padding: 10px; border-radius: 20px; margin-top: 20px; }
+        /* --- デザイン・視認性向上のためのベース --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.8;
+            color: #ffffff;
+            background-color: #090a0f; /* 背景が読み込まれるまでのベース色 */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* --- どんな背景でも文字を見やすくするダークガラスコンテナ --- */
+        .main-container {
+            max-width: 900px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.75); /* 背景が白くても確実に遮断 */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 50px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+        }
+
+        h1 { 
+            color: #00d2ff; 
+            border-bottom: 2px solid rgba(0, 210, 255, 0.3); 
+            padding-bottom: 20px; 
+            text-align: center; 
+            font-size: 2.2em;
+            margin-top: 0; 
+        }
+
+        h2 { 
+            color: #00d2ff; 
+            margin-top: 45px; 
+            border-left: 5px solid #00d2ff; 
+            padding-left: 15px; 
+            font-size: 1.6em; 
+        }
+
+        h3 { color: #88eaff; margin-top: 30px; font-size: 1.2em; }
+        
+        p { margin-bottom: 1.5em; opacity: 0.9; }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+        }
+
+        .icon { font-size: 1.3em; margin-right: 12px; vertical-align: middle; }
+        
+        /* 強調文字 */
+        b { color: #00d2ff; font-weight: 600; }
+        
+        .kbd { 
+            background: #333; 
+            border-radius: 5px; 
+            padding: 2px 8px; 
+            font-family: monospace; 
+            border: 1px solid #555;
+            color: #00d2ff;
+        }
+        
+        .back-link { 
+            display: inline-block; 
+            margin-top: 40px; 
+            color: #00d2ff; 
+            text-decoration: none; 
+            border: 2px solid #00d2ff; 
+            padding: 12px 45px; 
+            border-radius: 50px; 
+            transition: all 0.3s ease;
+            background: rgba(0, 210, 255, 0.1);
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .back-link:hover { 
+            background: #00d2ff; 
+            color: #000; 
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        ul { padding-left: 20px; }
+        li { margin-bottom: 10px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🚀 OrbitTab 完全マニュアル</h1>
-        <div class="card">
-            <h2>📥 リンクのインポート</h2>
-            <p>1. 📥ボタンでPCからブックマークHTMLを読み込みます。<br>2. ➕ボタンを押し、表示された番号を入力してBOXを画面に出します。</p>
+    <div class="main-container">
+        <h1>🚀 OrbitTab 完全活用マニュアル</h1>
+
+        <section class="feature-card">
+            <h2>1. ブックマークのインポート</h2>
+            <p>OrbitTabをあなたの専用コクピットにする第一歩は、既存のブックマークを取り込むことです。</p>
+            <h3>📥 インポート手順</h3>
+            <ul>
+                <li>右下の <b>📥</b> ボタンをクリックし、ブラウザから書き出した <b>HTMLブックマークファイル</b> を選択します。</li>
+                <li>解析が完了すると通知が表示されます。これで準備完了です！</li>
+            </ul>
+        </section>
+
+        <section class="feature-card">
+            <h2>2. カテゴリBOXの配置とカスタマイズ</h2>
+            <p>取り込んだブックマークを、用途に合わせて画面上に「BOX」として展開します。</p>
+            <h3>➕ BOXの追加</h3>
+            <ul>
+                <li>右下の <b>＋</b> ボタンをクリック。</li>
+                <li><b>番号を入力：</b> インポートしたフォルダがリスト表示されるので、表示したいフォルダの番号を入力します。</li>
+                <li><b>新規作成：</b> <span class="kbd">0</span> を入力すると、空のBOXを新しく作成できます。</li>
+            </ul>
+            <h3>🛠️ 自由な配置とリサイズ</h3>
+            <ul>
+                <li><b>移動：</b> BOX上部のヘッダー部分をドラッグして、画面のどこへでも配置できます。</li>
+                <li><b>リサイズ：</b> BOXの <b>右下端</b> をドラッグすると、自由な大きさに調整可能です。</li>
+                <li><b>最前面へ：</b> BOXをクリックすると、そのBOXが他のBOXよりも手前に表示されます。</li>
+            </ul>
+        </section>
+
+        <section class="feature-card">
+            <h2>3. リンクの個別整理</h2>
+            <p>BOXの中身はいつでも整理可能です。不要なものは捨て、必要なものは育てましょう。</p>
+            <h3>🗑️ 個別削除</h3>
+            <ul>
+                <li>BOX内の各リンクにマウスを重ねると、右側に <b>赤い「×」</b> が表示されます。</li>
+                <li>これをクリックすることで、BOXから特定のリンクだけを削除できます。</li>
+                <li><b>超安定化設計：</b> リンクを削除しても、調整したBOXのサイズや位置が崩れることはありません。</li>
+            </ul>
+        </section>
+
+        <section class="feature-card">
+            <h2>4. AIアシスタントと便利機能</h2>
+            <p>作業を加速させるための高度な連携機能が備わっています。</p>
+            <h3>✨ AIサイドパネル</h3>
+            <ul>
+                <li><b>✨</b> ボタンをクリックして、Gemini, ChatGPT, Claudeからお好みのAIを一人選びます。</li>
+                <li>次回からはワンクリックでそのAIがサイドパネルに現れます。</li>
+                <li><b>AIを切り替える：</b> ボタンを <b>右クリック</b> すると選択がリセットされ、別のAIを選び直せます。</li>
+            </ul>
+            <h3>📅 カレンダーと付箋</h3>
+            <ul>
+                <li><b>📅 ボタン：</b> 別タブでGoogleカレンダーを素早く開きます。</li>
+                <li><b>📝 ボタン：</b> 画面上に「デジタル付箋」を生成。メモを即座に残せます。</li>
+            </ul>
+        </section>
+
+        <section class="feature-card">
+            <h2>5. パーソナライズ</h2>
+            <h3>🖼️ 背景の変更</h3>
+            <ul>
+                <li>右下の <b>🖼️</b> ボタンをクリックしてお好みの画像を選択。</li>
+                <li>設定した背景はこのガイドページにも即座に反映され、統一感を保ちます。</li>
+            </ul>
+            <h3>💾 自動保存</h3>
+            <ul>
+                <li>BOXの位置、サイズ、追加したメモ、背景画像。すべてはブラウザに <b>自動保存</b> されます。次にOrbitTabを開いた時、そこはあなたが離れた時のままの状態です。</li>
+            </ul>
+        </section>
+
+        <div style="text-align: center;">
+            <a id="close-btn" class="back-link">← ガイドを閉じてコクピットへ戻る</a>
         </div>
-        <div class="card">
-            <h2>✨ AI & サイドパネル</h2>
-            <p>・✨ボタンをクリックして好みのAIを登録。次からは1クリックで起動します。<br>・設定を変えたい時は<b>右クリック</b>でリセットできます。</p>
-        </div>
-        <div class="card">
-            <h2>🛠 BOXの操作</h2>
-            <p>・<b>リサイズ:</b> BOXの右下をドラッグして自由に変形可能。<br>・<b>削除:</b> リンクにマウスを乗せて「×」をクリック。<br>・<b>移動:</b> ヘッダーを掴んでドラッグ。</p>
-        </div>
-        <a href="#" id="close-btn" class="back-btn">閉じる</a>
     </div>
+
     <script src="js/guide-script.js"></script>
 </body>
 </html>
