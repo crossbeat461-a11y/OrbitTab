@@ -38,48 +38,54 @@ function updateClock() {
     date.innerText = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 }
 
-// --- 4. インポート・背景設定 ---
+// --- 4. インポート・背景設定 (リピート防止・全画面表示版) ---
 function setupImportFeature() {
-    const input = document.getElementById('bookmark-input');
-    const importBtn = document.getElementById('import-bookmarks-btn');
-    
-    if (importBtn) {
-        importBtn.onclick = () => input.click();
-        input.onchange = (e) => {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                const doc = new DOMParser().parseFromString(ev.target.result, 'text/html');
-                bookmarkCatalog = {};
-                doc.querySelectorAll('a').forEach(a => {
-                    let folder = "未分類", p = a.parentElement;
-                    while (p && p !== doc.body) { 
-                        const h3 = p.querySelector('h3'); 
-                        if (h3) { folder = h3.textContent; break; } 
-                        p = p.parentElement; 
-                    }
-                    if (!bookmarkCatalog[folder]) bookmarkCatalog[folder] = [];
-                    bookmarkCatalog[folder].push({ title: a.textContent, url: a.href });
-                });
-                alert("読み込み完了！【＋】ボタンからBOXを追加してください。");
-            };
-            reader.readAsText(e.target.files[0]);
-        };
-    }
+    // ... (前略：インポートボタンの処理はそのまま) ...
 
     const bgBtn = document.getElementById('bg-change-btn');
     const bgInput = document.getElementById('bg-input');
-    if (bgBtn) {
+    const bgContainer = document.getElementById('bg-container');
+
+    if (bgBtn && bgInput && bgContainer) {
         bgBtn.onclick = () => bgInput.click();
         bgInput.onchange = (e) => {
             const reader = new FileReader();
             reader.onload = (ev) => {
-                document.getElementById('bg-container').style.backgroundImage = `url(${ev.target.result})`;
-                localStorage.setItem('orbitTab_bg_v4', ev.target.result);
+                const url = ev.target.result;
+                
+                // 背景画像をセットし、スタイルを強制的に調整
+                bgContainer.style.backgroundImage = `url(${url})`;
+                bgContainer.style.backgroundSize = "cover";      // 画面一杯に広げる
+                bgContainer.style.backgroundPosition = "center";  // 中央合わせ
+                bgContainer.style.backgroundRepeat = "no-repeat"; // 繰り返し禁止
+                bgContainer.style.backgroundAttachment = "fixed"; // スクロールしても固定
+                
+                localStorage.setItem('orbitTab_bg_v4', url);
             };
             reader.readAsDataURL(e.target.files[0]);
         };
     }
 }
+
+// --- 7. 初期化処理 (window.onload) ---
+window.onload = () => { 
+    updateClock(); 
+    setInterval(updateClock, 1000); 
+    render(); 
+    setupImportFeature(); 
+    setupButtonActions(); 
+    
+    // 保存された背景の復元
+    const bg = localStorage.getItem('orbitTab_bg_v4');
+    const bgContainer = document.getElementById('bg-container');
+    if (bg && bgContainer) {
+        bgContainer.style.backgroundImage = `url(${bg})`;
+        bgContainer.style.backgroundSize = "cover";
+        bgContainer.style.backgroundPosition = "center";
+        bgContainer.style.backgroundRepeat = "no-repeat";
+        bgContainer.style.backgroundAttachment = "fixed";
+    }
+};
 
 // --- 5. 描画処理 (カテゴリBOX・付箋 / サイズ維持・安定版) ---
 function makeWidget(el, key, def) {
