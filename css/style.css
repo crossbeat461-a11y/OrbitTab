@@ -167,23 +167,62 @@ textarea {
 #clock { font-size: 120px; font-weight: 200; color: #fff; text-shadow: 0 0 30px rgba(255,255,255,0.2); }
 #date { font-size: 22px; color: #00d2ff; opacity: 0.9; margin-top: -10px; }
 
-/* --- 9. スクロールバーとツールチップ --- */
-.ni-textarea::-webkit-scrollbar, .link-list::-webkit-scrollbar {
-    width: 6px;
-}
-.ni-textarea::-webkit-scrollbar-thumb, .link-list::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
+/* --- 9. ツールチップ (ボタン上部に横向きで表示) --- */
+[data-tooltip] {
+    position: relative;
 }
 
 [data-tooltip]::before {
     content: attr(data-tooltip);
-    position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%);
-    padding: 8px 14px; background: #00d2ff; color: #000; font-weight: bold;
-    font-size: 11px; border-radius: 8px; opacity: 0; visibility: hidden; transition: 0.3s;
+    position: absolute;
+    bottom: 120%; /* ボタンの上側に配置 */
+    left: 50%;
+    transform: translateX(-50%); /* 中央揃え */
+    
+    /* 横に伸びるように設定 */
+    white-space: nowrap; /* 改行を禁止して横長に保持 */
+    padding: 8px 12px;
+    
+    background: rgba(0, 210, 255, 0.95); /* OrbitTabブルー */
+    color: #000;
+    font-weight: bold;
+    font-size: 12px;
+    border-radius: 8px;
+    
+    /* アニメーションと表示制御 */
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    pointer-events: none; /* マウス操作を邪魔しない */
+    z-index: 3000;
+    
+    /* 小さな三角形（矢印） */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
-[data-tooltip]:hover::before { opacity: 1; visibility: visible; }
 
-/* 削除ボタンなどの演出 */
-.cat-btn { cursor: pointer; opacity: 0.4; transition: 0.2s; font-size: 16px; margin-left: 10px; }
-.cat-btn:hover { opacity: 1; color: #ff4d4d; }
+/* ツールチップの三角形 */
+[data-tooltip]::after {
+    content: "";
+    position: absolute;
+    bottom: 105%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px 6px 0 6px;
+    border-style: solid;
+    border-color: rgba(0, 210, 255, 0.95) transparent transparent transparent;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 3000;
+}
+
+[data-tooltip]:hover::before,
+[data-tooltip]:hover::after {
+    opacity: 1;
+    visibility: visible;
+    bottom: 130%; /* ホバー時にふわっと浮き上がる演出 */
+}
+
+[data-tooltip]:hover::after {
+    bottom: 115%; /* 三角形も一緒に移動 */
+}
