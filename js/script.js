@@ -146,13 +146,14 @@ function openSidePanel(url) {
     }
 }
 
-// --- 5. 描画処理 ---
+// --- 5. 描画処理 (修正版) ---
 function render() {
     const container = document.getElementById('widgets-container');
     if (!container) return;
     container.innerHTML = "";
 
-    Object.keys(links).forEach((cat, i) => {
+    // カテゴリBOXの描画
+    Object.keys(links).forEach((cat) => {
         const box = document.createElement('div');
         box.className = 'widget';
         box.innerHTML = `
@@ -165,47 +166,61 @@ function render() {
             </div>
             <div class="link-list"></div>`;
         
-        box.querySelector('.add-single-btn').onclick = (e) => {
+        // BOX自体の削除
+        box.querySelector('.cat-delete-btn').onclick = (e) => {
             e.stopPropagation();
-            const t = prompt("リンクの名前を入力:", "新しいサイト");
-            if (!t) return;
-            const u = prompt("URLを入力:", "https://");
-            if (!u || !u.startsWith('http')) { alert("有効なURLを入力してください。"); return; }
-            if (!Array.isArray(links[cat])) links[cat] = [];
-            links[cat].push({ title: t, url: u });
-            saveLinks();
-            render();
-        };
-
-        const delBtn = box.querySelector('.cat-delete-btn');
-        delBtn.onclick = (e) => {
-            e.stopPropagation();
-            if(confirm(`「${cat}」を削除しますか？`)) { delete links[cat]; saveLinks(); render(); }
+            if(confirm(`カテゴリ「${cat}」を完全に削除しますか？`)) {
+                delete links[cat];
+                saveLinks();
+                render();
+            }
         };
 
         const list = box.querySelector('.link-list');
-        (links[cat] || []).forEach((item, linkIdx) => {
+        
+        // リンク一覧の描画 (安全なループ処理)
+        const currentLinks = links[cat] || [];
+        currentLinks.forEach((item, index) => {
             const row = document.createElement('div');
-            row.className = 'link-wrapper link-item'; // CSSのhoverを有効にするためにlink-itemを追加
-            row.innerHTML = `<span>${item.title}</span><span class="delete-link-btn">×</span>`;
-            row.onclick = () => window.open(item.url, '_blank');
+            row.className = 'link-wrapper link-item';
+            
+            // リンク名を表示するスパン
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = item.title;
+            row.appendChild(nameSpan);
 
-            row.querySelector('.delete-link-btn').onclick = (e) => {
-                e.stopPropagation();
+            // 個別削除ボタン (×)
+            const delBtn = document.createElement('span');
+            delBtn.className = 'delete-link-btn';
+            delBtn.innerHTML = '×';
+            delBtn.onclick = (e) => {
+                e.stopPropagation(); // BOXクリック（リンク移動）を防ぐ
                 if(confirm(`「${item.title}」を削除しますか？`)) {
-                    links[cat].splice(linkIdx, 1);
+                    // 特定のカテゴリの配列から、今のインデックスの要素を1つ消す
+                    links[cat].splice(index, 1);
                     saveLinks();
-                    render();
+                    render(); // 再描画
                 }
             };
+
+            row.appendChild(delBtn);
+            
+            // リンクをクリックしたら別タブで開く
+            row.onclick = (e) => {
+                if (e.target.className !== 'delete-link-btn') {
+                    window.open(item.url, '_blank');
+                }
+            };
+
             list.appendChild(row);
         });
 
         container.appendChild(box);
         const safeKey = "pos_cat_" + cat.replace(/\s+/g, '_');
-        makeWidget(box, safeKey, {left: 100 + i*340, top: 550, w: 300, h: 250});
+        makeWidget(box, safeKey, {left: 100, top: 100, w: 300, h: 250});
     });
 
+    // 付箋の描画 (変更なし)
     notes.forEach((n, i) => {
         const nb = document.createElement('div');
         nb.className = 'widget';
@@ -230,7 +245,6 @@ function render() {
         makeWidget(nb, `pos_note_${i}`, {left: 400 + i*50, top: 150 + i*50, w: 320, h: 280});
     });
 }
-
 // --- 6. ボタンアクション設定 ---
 function setupButtonActions() {
     // 【カテゴリ追加】
