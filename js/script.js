@@ -309,23 +309,6 @@ function setupButtonActions() {
         alert("AIの選択をリセットしました。次に押す時に再設定できます。");
     };
 
-    // --- 【ワークスペース (💼)】 ---
-    document.getElementById('ws-btn').onclick = () => {
-        let lastWs = localStorage.getItem('orbitTab_last_ws');
-        if (!lastWs) {
-            const choice = prompt("デフォルトのツールを選択：\n[1] Notion\n[2] Slack", "1");
-            const urls = { 
-                "1": "https://www.notion.so/", 
-                "2": "https://app.slack.com/client/" 
-            };
-            if (urls[choice]) {
-                lastWs = urls[choice];
-                localStorage.setItem('orbitTab_last_ws', lastWs);
-            }
-        }
-        if (lastWs) openSidePanel(lastWs);
-    };
-
     document.getElementById('ws-btn').oncontextmenu = (e) => {
         e.preventDefault();
         localStorage.removeItem('orbitTab_last_ws');
