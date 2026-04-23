@@ -1,10 +1,11 @@
 /**
- * OrbitTab v1.4.1 - リンク削除バグ完全修正版
+ * OrbitTab v1.4.1 - リンク削除バグ完全修正・最終安定版
+ * セクション分けコメント適用済み
  */
 
 // --- 1. 定数・初期設定 ---
 const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153";
-const DEFAULT_NOTE = [{ id: Date.now(), title: "🚀 クイックガイド", body: "右下のボタンからブックマークを読み込み、＋ボタンでBOXを追加してください。" }];
+const DEFAULT_NOTE = [{ id: Date.now(), title: "🚀 クイックガイド", body: "右下のボタンからブックマークを読み込み、＋ボタンでBOXを追加してください。リンクを削除しても、リサイズしたBOXはそのまま維持されます。" }];
 
 // --- 2. データ保存・取得処理 ---
 function getStored(key, def) {
@@ -60,6 +61,9 @@ function setupImportFeature() {
             const reader = new FileReader();
             reader.onload = (ev) => {
                 bgContainer.style.backgroundImage = `url(${ev.target.result})`;
+                bgContainer.style.backgroundSize = "cover";
+                bgContainer.style.backgroundRepeat = "no-repeat";
+                bgContainer.style.backgroundAttachment = "fixed";
                 localStorage.setItem('orbitTab_bg_v4', ev.target.result);
             };
             reader.readAsDataURL(e.target.files[0]);
@@ -113,9 +117,9 @@ function render() {
         };
 
         const list = box.querySelector('.link-list');
-        // --- リンク削除の超安定化ロジック ---
+        // --- リンク削除の超安定化ロジック (中身だけ更新) ---
         const renderLinks = () => {
-            list.innerHTML = ""; // BOX全体ではなく、リンクのリスト部分だけを書き換える
+            list.innerHTML = ""; 
             boxData.items.forEach((item, lIdx) => {
                 const row = document.createElement('div');
                 row.className = 'link-item';
@@ -126,7 +130,7 @@ function render() {
                     if(confirm("削除しますか？")) { 
                         boxData.items.splice(lIdx, 1); 
                         saveLinks(); 
-                        renderLinks(); // ← これが重要！BOXの再描画をせず中身だけ更新する
+                        renderLinks(); 
                     }
                 };
                 list.appendChild(row);
@@ -138,7 +142,6 @@ function render() {
         makeWidget(box, safeKey, {left: 50 + bIdx*350, top: 500, w: 300, h: 250});
     });
 
-    // 付箋描画 (略)
     notes.forEach((n, i) => {
         const nb = document.createElement('div');
         nb.className = 'widget';
@@ -176,7 +179,10 @@ function setupButtonActions() {
             const urls = { "1": "https://gemini.google.com/app", "2": "https://chatgpt.com/", "3": "https://claude.ai/" };
             ai = urls[c]; if(ai) localStorage.setItem('orbitTab_last_ai', ai);
         }
-        if (ai) { chrome.sidePanel.setOptions({ path: ai, enabled: true }); chrome.sidePanel.open({ windowId: chrome.windows.WINDOW_ID_CURRENT }); }
+        if (ai) {
+            chrome.sidePanel.setOptions({ path: ai, enabled: true });
+            chrome.sidePanel.open({ windowId: chrome.windows.WINDOW_ID_CURRENT });
+        }
     };
     document.getElementById('ai-btn').oncontextmenu = (e) => { e.preventDefault(); localStorage.removeItem('orbitTab_last_ai'); alert("リセット完了"); };
     document.getElementById('guide-btn').onclick = () => window.open(chrome.runtime.getURL('guide.html'), '_blank');
