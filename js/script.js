@@ -1,5 +1,5 @@
 /**
- * OrbitTab v1.4.0 - 整合性修正・完全安定版
+ * OrbitTab v1.4.1 - リンク削除バグ完全修正版
  */
 
 // --- 1. 定数・初期設定 ---
@@ -12,7 +12,6 @@ function getStored(key, def) {
     try { return (val === null) ? def : JSON.parse(val); } catch(e) { return def; }
 }
 
-// データの整合性を保つため、カテゴリBOXも配列で管理
 let links = getStored('orbitTab_v2_links', []); 
 let notes = getStored('orbitTab_notes_v4', DEFAULT_NOTE);
 let bookmarkCatalog = {}; 
@@ -60,16 +59,15 @@ function setupImportFeature() {
         document.getElementById('bg-input').onchange = (e) => {
             const reader = new FileReader();
             reader.onload = (ev) => {
-                const url = ev.target.result;
-                bgContainer.style.backgroundImage = `url(${url})`;
-                localStorage.setItem('orbitTab_bg_v4', url);
+                bgContainer.style.backgroundImage = `url(${ev.target.result})`;
+                localStorage.setItem('orbitTab_bg_v4', ev.target.result);
             };
             reader.readAsDataURL(e.target.files[0]);
         };
     }
 }
 
-// --- 5. 描画処理 (サイズ・位置をIDで固定) ---
+// --- 5. 描画処理 (リンク削除時のサイズ崩れを物理的に防ぐ) ---
 function makeWidget(el, key, def) {
     const pos = getStored(key, def);
     el.style.left = pos.left + "px"; el.style.top = pos.top + "px";
@@ -97,11 +95,10 @@ function render() {
     const container = document.getElementById('widgets-container');
     if (!container) return; container.innerHTML = "";
 
-    // カテゴリBOX描画
     links.forEach((boxData, bIdx) => {
         const box = document.createElement('div');
         box.className = 'widget';
-        const safeKey = `pos_id_${boxData.id}`; // 固定IDを使用
+        const safeKey = `pos_id_${boxData.id}`;
 
         box.innerHTML = `
             <div class="widget-header">
@@ -116,26 +113,36 @@ function render() {
         };
 
         const list = box.querySelector('.link-list');
-        boxData.items.forEach((item, lIdx) => {
-            const row = document.createElement('div');
-            row.className = 'link-item';
-            row.innerHTML = `<span class="link-name">${item.title}</span><span class="delete-link-btn">×</span>`;
-            row.onclick = (e) => { if(!e.target.classList.contains('delete-link-btn')) window.open(item.url, '_blank'); };
-            row.querySelector('.delete-link-btn').onclick = (e) => {
-                e.stopPropagation();
-                if(confirm("リンクを削除？")) { boxData.items.splice(lIdx, 1); saveLinks(); render(); }
-            };
-            list.appendChild(row);
-        });
+        // --- リンク削除の超安定化ロジック ---
+        const renderLinks = () => {
+            list.innerHTML = ""; // BOX全体ではなく、リンクのリスト部分だけを書き換える
+            boxData.items.forEach((item, lIdx) => {
+                const row = document.createElement('div');
+                row.className = 'link-item';
+                row.innerHTML = `<span class="link-name">${item.title}</span><span class="delete-link-btn">×</span>`;
+                row.onclick = (e) => { if(!e.target.classList.contains('delete-link-btn')) window.open(item.url, '_blank'); };
+                row.querySelector('.delete-link-btn').onclick = (e) => {
+                    e.stopPropagation();
+                    if(confirm("削除しますか？")) { 
+                        boxData.items.splice(lIdx, 1); 
+                        saveLinks(); 
+                        renderLinks(); // ← これが重要！BOXの再描画をせず中身だけ更新する
+                    }
+                };
+                list.appendChild(row);
+            });
+        };
+        renderLinks();
+        
         container.appendChild(box);
         makeWidget(box, safeKey, {left: 50 + bIdx*350, top: 500, w: 300, h: 250});
     });
 
-    // 付箋描画
+    // 付箋描画 (略)
     notes.forEach((n, i) => {
         const nb = document.createElement('div');
         nb.className = 'widget';
-        const nKey = `pos_note_id_${n.id || i}`;
+        const nKey = `pos_note_id_${n.id}`;
         nb.innerHTML = `<div class="widget-header"><input type="text" value="${n.title}"><span class="cat-btn note-del">🗑️</span></div><textarea>${n.body}</textarea>`;
         const nt = nb.querySelector('input'), ni = nb.querySelector('textarea');
         nt.oninput = () => { notes[i].title = nt.value; saveNotes(); };
@@ -181,5 +188,9 @@ function setupButtonActions() {
 window.onload = () => { 
     updateClock(); setInterval(updateClock, 1000); render(); setupImportFeature(); setupButtonActions(); 
     const bg = localStorage.getItem('orbitTab_bg_v4');
-    if (bg) document.getElementById('bg-container').style.backgroundImage = `url(${bg})`;
+    if (bg) {
+        const bc = document.getElementById('bg-container');
+        bc.style.backgroundImage = `url(${bg})`;
+        bc.style.backgroundSize = "cover"; bc.style.backgroundRepeat = "no-repeat"; bc.style.backgroundAttachment = "fixed";
+    }
 };
