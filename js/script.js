@@ -1,5 +1,5 @@
 /**
- * OrbitTab v1.3.3 - 最終安定版
+ * OrbitTab v1.3.4 - インポート修正 & 背景リピート防止版
  * セクション分けコメント適用済み
  */
 
@@ -38,28 +38,53 @@ function updateClock() {
     date.innerText = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 }
 
-// --- 4. インポート・背景設定 (リピート防止・全画面表示版) ---
+// --- 4. インポート・背景設定 (機能復旧 & リピート防止) ---
 function setupImportFeature() {
-    // ... (前略：インポートボタンの処理はそのまま) ...
+    const input = document.getElementById('bookmark-input');
+    const importBtn = document.getElementById('import-bookmarks-btn');
+    
+    // ブックマークインポートの完全な処理
+    if (importBtn) {
+        importBtn.onclick = () => input.click();
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const doc = new DOMParser().parseFromString(ev.target.result, 'text/html');
+                bookmarkCatalog = {};
+                doc.querySelectorAll('a').forEach(a => {
+                    let folder = "未分類", p = a.parentElement;
+                    while (p && p !== doc.body) { 
+                        const h3 = p.querySelector('h3'); 
+                        if (h3) { folder = h3.textContent; break; } 
+                        p = p.parentElement; 
+                    }
+                    if (!bookmarkCatalog[folder]) bookmarkCatalog[folder] = [];
+                    bookmarkCatalog[folder].push({ title: a.textContent, url: a.href });
+                });
+                alert("読み込み完了！【＋】ボタンからBOXを追加してください。");
+            };
+            reader.readAsText(file);
+        };
+    }
 
     const bgBtn = document.getElementById('bg-change-btn');
     const bgInput = document.getElementById('bg-input');
     const bgContainer = document.getElementById('bg-container');
-
+    
+    // 背景設定の強化 (1枚で全画面に表示)
     if (bgBtn && bgInput && bgContainer) {
         bgBtn.onclick = () => bgInput.click();
         bgInput.onchange = (e) => {
             const reader = new FileReader();
             reader.onload = (ev) => {
                 const url = ev.target.result;
-                
-                // 背景画像をセットし、スタイルを強制的に調整
                 bgContainer.style.backgroundImage = `url(${url})`;
-                bgContainer.style.backgroundSize = "cover";      // 画面一杯に広げる
-                bgContainer.style.backgroundPosition = "center";  // 中央合わせ
-                bgContainer.style.backgroundRepeat = "no-repeat"; // 繰り返し禁止
-                bgContainer.style.backgroundAttachment = "fixed"; // スクロールしても固定
-                
+                bgContainer.style.backgroundSize = "cover";
+                bgContainer.style.backgroundPosition = "center";
+                bgContainer.style.backgroundRepeat = "no-repeat";
+                bgContainer.style.backgroundAttachment = "fixed";
                 localStorage.setItem('orbitTab_bg_v4', url);
             };
             reader.readAsDataURL(e.target.files[0]);
@@ -67,27 +92,7 @@ function setupImportFeature() {
     }
 }
 
-// --- 7. 初期化処理 (window.onload) ---
-window.onload = () => { 
-    updateClock(); 
-    setInterval(updateClock, 1000); 
-    render(); 
-    setupImportFeature(); 
-    setupButtonActions(); 
-    
-    // 保存された背景の復元
-    const bg = localStorage.getItem('orbitTab_bg_v4');
-    const bgContainer = document.getElementById('bg-container');
-    if (bg && bgContainer) {
-        bgContainer.style.backgroundImage = `url(${bg})`;
-        bgContainer.style.backgroundSize = "cover";
-        bgContainer.style.backgroundPosition = "center";
-        bgContainer.style.backgroundRepeat = "no-repeat";
-        bgContainer.style.backgroundAttachment = "fixed";
-    }
-};
-
-// --- 5. 描画処理 (カテゴリBOX・付箋 / サイズ維持・安定版) ---
+// --- 5. 描画処理 (カテゴリBOX・付箋 / サイズ維持安定版) ---
 function makeWidget(el, key, def) {
     const pos = getStored(key, def);
     el.style.left = pos.left + "px";
@@ -128,11 +133,9 @@ function render() {
     if (!container) return;
     container.innerHTML = "";
 
-    // カテゴリBOXの描画
     Object.keys(links).forEach((cat, idx) => {
         const box = document.createElement('div');
         box.className = 'widget';
-        // インデックス（番号）で位置を固定保存することでサイズ崩れを防止
         const safeKey = `pos_box_${idx}`; 
 
         box.innerHTML = `
@@ -177,7 +180,6 @@ function render() {
         makeWidget(box, safeKey, {left: 50 + idx * 350, top: 500, w: 300, h: 250});
     });
 
-    // 付箋の描画
     notes.forEach((n, i) => {
         const nb = document.createElement('div');
         nb.className = 'widget';
@@ -202,7 +204,6 @@ function render() {
 
 // --- 6. ボタンアクション設定 (メイン操作) ---
 function setupButtonActions() {
-    // カテゴリ追加
     document.getElementById('add-cat-btn').onclick = () => {
         const keys = Object.keys(bookmarkCatalog);
         let msg = "追加するカテゴリ番号を入力してください:\n[0] 新規空BOXを作成\n";
@@ -218,7 +219,6 @@ function setupButtonActions() {
         }
     };
 
-    // AIアシスタント (サイドパネル)
     document.getElementById('ai-btn').onclick = () => {
         let ai = localStorage.getItem('orbitTab_last_ai');
         if (!ai) {
@@ -237,14 +237,12 @@ function setupButtonActions() {
         }
     };
 
-    // AIリセット (右クリック)
     document.getElementById('ai-btn').oncontextmenu = (e) => { 
         e.preventDefault(); 
         localStorage.removeItem('orbitTab_last_ai'); 
         alert("AIの選択をリセットしました。"); 
     };
 
-    // 外部ページ・その他
     document.getElementById('guide-btn').onclick = () => window.open(chrome.runtime.getURL('guide.html'), '_blank');
     document.getElementById('cal-setup-btn').onclick = () => window.open('https://calendar.google.com/', '_blank');
     document.getElementById('note-setup-btn').onclick = () => { 
@@ -263,5 +261,12 @@ window.onload = () => {
     setupButtonActions(); 
     
     const bg = localStorage.getItem('orbitTab_bg_v4');
-    if (bg) document.getElementById('bg-container').style.backgroundImage = `url(${bg})`;
+    const bgContainer = document.getElementById('bg-container');
+    if (bg && bgContainer) {
+        bgContainer.style.backgroundImage = `url(${bg})`;
+        bgContainer.style.backgroundSize = "cover";
+        bgContainer.style.backgroundPosition = "center";
+        bgContainer.style.backgroundRepeat = "no-repeat";
+        bgContainer.style.backgroundAttachment = "fixed";
+    }
 };
