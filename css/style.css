@@ -227,3 +227,22 @@ body {
 .link-item:hover .delete-link-btn {
     display: block;
 }
+/* --- 操作性向上：カテゴリBOX内の文字と余白の調整 --- */
+.link-item {
+    padding: 10px 12px;
+    margin: 4px 0;
+    font-size: 15px; /* 文字を大きく設定 */
+}
+
+.link-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.delete-link-btn {
+    font-size: 18px; /* 削除ボタンも押しやすく */
+    padding-left: 10px;
+    color: #ff4d4d;
+}
