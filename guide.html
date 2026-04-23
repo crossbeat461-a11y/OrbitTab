@@ -2,13 +2,12 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>OrbitTab 完全活用ガイド</title>
+    <title>OrbitTab 完全網羅ガイド</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.8;
             color: #eee;
-            /* 背景設定 */
             background-color: #090a0f;
             background-size: cover;
             background-position: center;
@@ -21,12 +20,11 @@
             align-items: center;
         }
 
-        /* メインの半透明コンテナ */
         .main-container {
-            max-width: 800px;
+            max-width: 900px;
             width: 100%;
-            background: rgba(0, 0, 0, 0.7); /* 少し暗めの半透明 */
-            backdrop-filter: blur(15px);   /* 背後をぼかす（グラスモーフィズム） */
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
@@ -35,18 +33,20 @@
         }
 
         h1 { color: #00d2ff; border-bottom: 2px solid #00d2ff; padding-bottom: 15px; text-align: center; margin-top: 0; }
-        h2 { color: #00d2ff; margin-top: 30px; display: flex; align-items: center; font-size: 1.4em; }
+        h2 { color: #00d2ff; margin-top: 35px; border-left: 4px solid #00d2ff; padding-left: 15px; font-size: 1.5em; }
+        h3 { color: #fff; margin-top: 25px; font-size: 1.1em; }
         
         .feature-card {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 20px;
+            padding: 25px;
             border-radius: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .icon { font-size: 1.2em; margin-right: 12px; }
         b { color: #00d2ff; }
+        .kbd { background: #444; border-radius: 4px; padding: 2px 6px; font-family: monospace; }
         
         .back-link { 
             display: inline-block; 
@@ -54,7 +54,7 @@
             color: #00d2ff; 
             text-decoration: none; 
             border: 1px solid #00d2ff; 
-            padding: 10px 25px; 
+            padding: 10px 35px; 
             border-radius: 30px; 
             transition: 0.3s;
             background: rgba(0, 210, 255, 0.1);
@@ -68,20 +68,45 @@
 </head>
 <body id="guide-body">
     <div class="main-container">
-        <h1>🚀 OrbitTab 完全活用ガイド</h1>
+        <h1>🚀 OrbitTab マニュアル - デジタル管制塔を極める</h1>
 
-        <div class="feature-card">
-            <h2><span class="icon">✨</span>AIアシスタント</h2>
-            <p>Gemini, ChatGPT, Claudeをワンクリックで起動。初回に選択したAIを記憶します。<b>右クリック</b>でAIの種類を変更可能です。</p>
-        </div>
+        <section class="feature-card">
+            <h2>1. ブックマークのインポートと管理</h2>
+            <p>OrbitTabの核心は、膨大なリンクを整理された「BOX」として配置することです。</p>
+            <h3>📥 インポート手順</h3>
+            <p>右下の 📥 ボタンをクリックし、ブラウザから書き出したHTMLファイルを選択してください。OrbitTabがフォルダ構造を解析し、即座に取り込みます。</p>
+            <h3>➕ カテゴリBOXの配置</h3>
+            <p>インポート後、➕ ボタンを押すと、取り込んだカテゴリがリストで表示されます。表示したいカテゴリの番号を入力するか、「0」で新しい空のBOXを作成してください。</p>
+        </section>
 
-        <div class="feature-card">
-            <h2><span class="icon">🗑️</span>リンクの個別整理</h2>
-            <p>カテゴリ内のリンクにマウスを重ねると表示される<b>赤い「×」</b>で、不要なリンクを個別に削除できます。</p>
-        </div>
+        <section class="feature-card">
+            <h2>2. 直感的なBOX操作</h2>
+            <h3>📦 自由な配置とリサイズ</h3>
+            <p>各ウィジェットのヘッダーをドラッグすることで、200vh×200vwの広大なキャンバス上のどこへでも配置できます。また、BOXの右下をドラッグすればリサイズも自由自在です。</p>
+            <h3>🔗 リンクの個別管理</h3>
+            <p>BOX内の各リンクにマウスを重ねると表示される <b>赤い「×」</b> ボタンで、不要なリンクを即座に削除できます。</p>
+            <h3>🖱️ ドラッグ＆ドロップ登録</h3>
+            <p>ブラウザのアドレスバーにあるURLや、他のページ上のリンクをBOXへ直接ドラッグ＆ドロップすることで、新しいリンクを追加できます。</p>
+        </section>
+
+        <section class="feature-card">
+            <h2>3. AIアシスタント・連携機能</h2>
+            <h3>✨ AIサイドパネル</h3>
+            <p>✨ ボタンで Gemini, ChatGPT, Claude をサイドパネルに召喚します。初回に選んだAIは記憶され、次からはワンクリックで起動します。<b>右クリック</b>することでAIの選択をリセットできます。</p>
+            <h3>📅 カレンダーと付箋</h3>
+            <p>📅 ボタンは Google カレンダーを別タブで開き、📝 ボタンは画面上に即座にメモを残せる付箋を生成します。</p>
+        </section>
+
+        <section class="feature-card">
+            <h2>4. カスタマイズと同期</h2>
+            <h3>🖼️ 背景デザイン</h3>
+            <p>🖼️ ボタンからお好みの画像を設定できます。設定した背景はこのガイドページにも自動で反映され、統一感を保ちます。</p>
+            <h3>💾 自動保存</h3>
+            <p>BOXの位置、サイズ、追加したメモなどはすべてブラウザに自動保存されます。再起動しても、あなた専用のレイアウトは常に維持されます。</p>
+        </section>
 
         <div style="text-align: center;">
-            <a href="#" id="close-btn" class="back-link">← このタブを閉じて戻る</a>
+            <a href="#" id="close-btn" class="back-link">← ガイドを閉じて戻る</a>
         </div>
     </div>
 
