@@ -215,9 +215,16 @@ function render() {
             list.appendChild(row);
         });
 
-        container.appendChild(box);
+container.appendChild(box);
         const safeKey = "pos_cat_" + cat.replace(/\s+/g, '_');
-        makeWidget(box, safeKey, {left: 100, top: 100, w: 300, h: 250});
+        
+        // 保存されている位置・サイズ情報を取得
+        const savedPos = getStored(safeKey, null);
+        
+        // もし保存されたサイズがあればそれを使う、なければデフォルト値
+        const defaultSize = savedPos ? savedPos : {left: 100, top: 100, w: 300, h: 250};
+        
+        makeWidget(box, safeKey, defaultSize);
     });
 
     // 付箋の描画 (変更なし)
