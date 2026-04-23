@@ -1,25 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "OrbitTab - デジタル管制塔",
-  "version": "1.3.0",
-  "description": "自分専用のコクピット。ブックマーク管理、AI、ワークスペースを一つに。",
-  "permissions": [
-    "storage",
-    "sidePanel",
-    "tabs"
-  ],
-  "host_permissions": [
-    "https://gemini.google.com/*",
-    "https://chatgpt.com/*",
-    "https://claude.ai/*",
-    "https://www.notion.so/*",
-    "https://app.slack.com/*"
-  ],
-  "side_panel": {
-    "default_path": "index.html"
-  },
+  "name": "OrbitTab",
+  "version": "1.5.2",
+  "description": "自分だけのデジタル管制塔。ブックマーク管理、AI連携、付箋機能を搭載。",
+  "permissions": ["storage", "sidePanel", "tabs"],
+  "host_permissions": ["<all_urls>"],
   "action": {
-    "default_title": "OrbitTabを開く"
+    "default_title": "OrbitTab"
   },
   "chrome_url_overrides": {
     "newtab": "index.html"

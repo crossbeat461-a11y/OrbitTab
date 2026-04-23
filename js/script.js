@@ -1,6 +1,5 @@
 /**
- * OrbitTab v1.4.1 - リンク削除バグ完全修正・最終安定版
- * セクション分けコメント適用済み
+ * OrbitTab v1.5.2 - Official Release Edition
  */
 
 // --- 1. 定数・初期設定 ---
