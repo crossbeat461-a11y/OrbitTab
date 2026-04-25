@@ -1,5 +1,6 @@
 /**
- * OrbitTab v1.5.2 - Official Release Edition
+ * OrbitTab v1.5.3 - Compliance Update
+ * 最小限の権限構成への調整版
  */
 
 // --- 1. 定数・初期設定 ---

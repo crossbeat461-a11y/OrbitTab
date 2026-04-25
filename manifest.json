@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "OrbitTab",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "自分だけのデジタル管制塔。ブックマーク管理、AI連携、付箋機能を搭載。",
-  "permissions": ["storage", "sidePanel", "tabs"],
+  "permissions": ["sidePanel"], 
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_title": "OrbitTab"
