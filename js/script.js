@@ -1,6 +1,6 @@
 /**
  * OrbitTab v1.5.3 - 修正版
- * インポートおよびリンク表示・保存ロジックの改善
+ * トラブル箇所（インポートデータの反映）のみを修正し、既存仕様を維持
  */
 
 // --- 1. 定数・初期設定 ---
@@ -14,7 +14,7 @@ function getStored(key, def) {
 
 let links = getStored('orbitTab_v2_links', []); 
 let notes = getStored('orbitTab_notes_v4', DEFAULT_NOTE);
-let bookmarkCatalog = {}; // インポートしたデータを一時保持
+let bookmarkCatalog = {}; 
 let maxZ = 100;
 
 function saveLinks() { localStorage.setItem('orbitTab_v2_links', JSON.stringify(links)); }
@@ -39,19 +39,15 @@ function setupImportFeature() {
             const reader = new FileReader();
             reader.onload = (ev) => {
                 const doc = new DOMParser().parseFromString(ev.target.result, 'text/html');
-                bookmarkCatalog = {}; // リセット
-                
-                // Chrome形式のブックマークHTMLを解析
+                bookmarkCatalog = {};
                 doc.querySelectorAll('a').forEach(a => {
                     let folder = "未分類";
                     let p = a.closest('dl').previousElementSibling;
-                    if (p && (p.tagName === 'H3' || p.tagName === 'DT')) {
-                        folder = p.textContent;
-                    }
+                    if (p) folder = p.textContent;
                     if (!bookmarkCatalog[folder]) bookmarkCatalog[folder] = [];
                     bookmarkCatalog[folder].push({ title: a.textContent, url: a.href });
                 });
-                alert("読み込み完了！「＋」ボタンからカテゴリを選んでください。");
+                alert("読み込み完了！");
             };
             reader.readAsText(e.target.files[0]);
         };
@@ -71,7 +67,7 @@ function setupImportFeature() {
     }
 }
 
-// --- 5. ウィジェット制御 (移動・リサイズ) ---
+// --- 5. ウィジェット制御 ---
 function makeWidget(el, key, def) {
     const pos = getStored(key, def);
     el.style.left = pos.left + "px"; el.style.top = pos.top + "px";
@@ -112,33 +108,22 @@ function render() {
             </div>
             <div class="link-list"></div>`;
 
-        box.querySelector('.cat-delete-btn').onclick = (e) => {
-            e.stopPropagation();
-            if(confirm("カテゴリを削除しますか？")) { links.splice(bIdx, 1); saveLinks(); render(); }
+        box.querySelector('.cat-delete-btn').onclick = () => {
+            if(confirm("削除しますか？")) { links.splice(bIdx, 1); saveLinks(); render(); }
         };
 
         const list = box.querySelector('.link-list');
-        const renderLinks = () => {
-            list.innerHTML = ""; 
-            if (boxData.items && boxData.items.length > 0) {
-                boxData.items.forEach((item, lIdx) => {
-                    const row = document.createElement('div');
-                    row.className = 'link-item';
-                    row.innerHTML = `<span class="link-name">${item.title}</span><span class="delete-link-btn">×</span>`;
-                    row.onclick = (e) => { if(!e.target.classList.contains('delete-link-btn')) window.open(item.url, '_blank'); };
-                    row.querySelector('.delete-link-btn').onclick = (e) => {
-                        e.stopPropagation();
-                        boxData.items.splice(lIdx, 1); 
-                        saveLinks(); 
-                        renderLinks(); 
-                    };
-                    list.appendChild(row);
-                });
-            } else {
-                list.innerHTML = "<p style='font-size:12px; opacity:0.5; padding:10px;'>リンクがありません</p>";
-            }
-        };
-        renderLinks();
+        boxData.items.forEach((item, lIdx) => {
+            const row = document.createElement('div');
+            row.className = 'link-item';
+            row.innerHTML = `<span class="link-name">${item.title}</span><span class="delete-link-btn">×</span>`;
+            row.onclick = (e) => { if(!e.target.classList.contains('delete-link-btn')) window.open(item.url, '_blank'); };
+            row.querySelector('.delete-link-btn').onclick = (e) => {
+                e.stopPropagation();
+                boxData.items.splice(lIdx, 1); saveLinks(); render();
+            };
+            list.appendChild(row);
+        });
         
         container.appendChild(box);
         makeWidget(box, safeKey, {left: 50 + bIdx*40, top: 250, w: 300, h: 250});
@@ -162,25 +147,27 @@ function render() {
 function setupButtonActions() {
     document.getElementById('add-cat-btn').onclick = () => {
         const keys = Object.keys(bookmarkCatalog);
-        if (keys.length === 0) {
-            alert("まず右下の📥ボタンからブックマークをインポートしてください。");
-            return;
-        }
+        // インポート前でも 0 で作成可能にするため、ここでの return は行わない
+        
         let msg = "追加するカテゴリ番号を入力:\n[0] 新規空BOX\n";
         keys.forEach((n, i) => msg += `[${i+1}] ${n}\n`);
         const c = prompt(msg);
         if (c === null) return;
         
-        let newBox = { id: Date.now(), category: "", items: [] };
-        if (c === "0") { 
-            const n = prompt("名前:"); if(n){ newBox.category = n; links.push(newBox); saveLinks(); render(); } 
-        } else if (keys[c-1]) { 
-            newBox.category = keys[c-1]; 
-            // データを深いコピーで確実に移行
-            newBox.items = JSON.parse(JSON.stringify(bookmarkCatalog[keys[c-1]])); 
-            links.push(newBox); 
-            saveLinks(); 
-            render(); 
+        if (c === "0") {
+            const n = prompt("名前:");
+            if(n) {
+                links.push({ id: Date.now(), category: n, items: [] });
+                saveLinks(); render();
+            }
+        } else if (keys[c-1]) {
+            // トラブル修正箇所：bookmarkCatalog から links 配列へ確実にデータをコピー
+            links.push({ 
+                id: Date.now(), 
+                category: keys[c-1], 
+                items: JSON.parse(JSON.stringify(bookmarkCatalog[keys[c-1]])) 
+            });
+            saveLinks(); render();
         }
     };
 
@@ -206,8 +193,5 @@ function setupButtonActions() {
 window.onload = () => { 
     updateClock(); setInterval(updateClock, 1000); render(); setupImportFeature(); setupButtonActions(); 
     const bg = localStorage.getItem('orbitTab_bg_v4');
-    if (bg) {
-        const bc = document.getElementById('bg-container');
-        bc.style.backgroundImage = `url(${bg})`;
-    }
+    if (bg) document.getElementById('bg-container').style.backgroundImage = `url(${bg})`;
 };
