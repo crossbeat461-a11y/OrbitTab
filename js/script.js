@@ -1,11 +1,10 @@
 /**
- * OrbitTab v1.5.3 - Compliance Update
- * 最小限の権限構成への調整版
+ * OrbitTab v1.5.3 - 修正版
+ * インポートおよびリンク表示・保存ロジックの改善
  */
 
 // --- 1. 定数・初期設定 ---
-const NOTE_URL = "https://note.com/ktech_dev/m/m04f657544153";
-const DEFAULT_NOTE = [{ id: Date.now(), title: "🚀 クイックガイド", body: "右下のボタンからブックマークを読み込み、＋ボタンでBOXを追加してください。リンクを削除しても、リサイズしたBOXはそのまま維持されます。" }];
+const DEFAULT_NOTE = [{ id: Date.now(), title: "🚀 クイックガイド", body: "右下のボタンからブックマークを読み込み、＋ボタンでBOXを追加してください。" }];
 
 // --- 2. データ保存・取得処理 ---
 function getStored(key, def) {
@@ -15,7 +14,7 @@ function getStored(key, def) {
 
 let links = getStored('orbitTab_v2_links', []); 
 let notes = getStored('orbitTab_notes_v4', DEFAULT_NOTE);
-let bookmarkCatalog = {}; 
+let bookmarkCatalog = {}; // インポートしたデータを一時保持
 let maxZ = 100;
 
 function saveLinks() { localStorage.setItem('orbitTab_v2_links', JSON.stringify(links)); }
@@ -36,24 +35,28 @@ function setupImportFeature() {
     if (importBtn) {
         importBtn.onclick = () => input.click();
         input.onchange = (e) => {
+            if (!e.target.files[0]) return;
             const reader = new FileReader();
             reader.onload = (ev) => {
                 const doc = new DOMParser().parseFromString(ev.target.result, 'text/html');
-                bookmarkCatalog = {};
+                bookmarkCatalog = {}; // リセット
+                
+                // Chrome形式のブックマークHTMLを解析
                 doc.querySelectorAll('a').forEach(a => {
-                    let folder = "未分類", p = a.parentElement;
-                    while (p && p !== doc.body) { 
-                        const h3 = p.querySelector('h3'); if (h3) { folder = h3.textContent; break; } 
-                        p = p.parentElement; 
+                    let folder = "未分類";
+                    let p = a.closest('dl').previousElementSibling;
+                    if (p && (p.tagName === 'H3' || p.tagName === 'DT')) {
+                        folder = p.textContent;
                     }
                     if (!bookmarkCatalog[folder]) bookmarkCatalog[folder] = [];
                     bookmarkCatalog[folder].push({ title: a.textContent, url: a.href });
                 });
-                alert("読み込み完了！");
+                alert("読み込み完了！「＋」ボタンからカテゴリを選んでください。");
             };
             reader.readAsText(e.target.files[0]);
         };
     }
+
     const bgBtn = document.getElementById('bg-change-btn'), bgContainer = document.getElementById('bg-container');
     if (bgBtn) {
         bgBtn.onclick = () => document.getElementById('bg-input').click();
@@ -61,9 +64,6 @@ function setupImportFeature() {
             const reader = new FileReader();
             reader.onload = (ev) => {
                 bgContainer.style.backgroundImage = `url(${ev.target.result})`;
-                bgContainer.style.backgroundSize = "cover";
-                bgContainer.style.backgroundRepeat = "no-repeat";
-                bgContainer.style.backgroundAttachment = "fixed";
                 localStorage.setItem('orbitTab_bg_v4', ev.target.result);
             };
             reader.readAsDataURL(e.target.files[0]);
@@ -71,7 +71,7 @@ function setupImportFeature() {
     }
 }
 
-// --- 5. 描画処理 (リンク削除時のサイズ崩れを物理的に防ぐ) ---
+// --- 5. ウィジェット制御 (移動・リサイズ) ---
 function makeWidget(el, key, def) {
     const pos = getStored(key, def);
     el.style.left = pos.left + "px"; el.style.top = pos.top + "px";
@@ -95,6 +95,7 @@ function savePos(el, key) {
     localStorage.setItem(key, JSON.stringify({ left: el.offsetLeft, top: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight }));
 }
 
+// --- 6. 描画処理 ---
 function render() {
     const container = document.getElementById('widgets-container');
     if (!container) return; container.innerHTML = "";
@@ -117,29 +118,30 @@ function render() {
         };
 
         const list = box.querySelector('.link-list');
-        // --- リンク削除の超安定化ロジック (中身だけ更新) ---
         const renderLinks = () => {
             list.innerHTML = ""; 
-            boxData.items.forEach((item, lIdx) => {
-                const row = document.createElement('div');
-                row.className = 'link-item';
-                row.innerHTML = `<span class="link-name">${item.title}</span><span class="delete-link-btn">×</span>`;
-                row.onclick = (e) => { if(!e.target.classList.contains('delete-link-btn')) window.open(item.url, '_blank'); };
-                row.querySelector('.delete-link-btn').onclick = (e) => {
-                    e.stopPropagation();
-                    if(confirm("削除しますか？")) { 
+            if (boxData.items && boxData.items.length > 0) {
+                boxData.items.forEach((item, lIdx) => {
+                    const row = document.createElement('div');
+                    row.className = 'link-item';
+                    row.innerHTML = `<span class="link-name">${item.title}</span><span class="delete-link-btn">×</span>`;
+                    row.onclick = (e) => { if(!e.target.classList.contains('delete-link-btn')) window.open(item.url, '_blank'); };
+                    row.querySelector('.delete-link-btn').onclick = (e) => {
+                        e.stopPropagation();
                         boxData.items.splice(lIdx, 1); 
                         saveLinks(); 
                         renderLinks(); 
-                    }
-                };
-                list.appendChild(row);
-            });
+                    };
+                    list.appendChild(row);
+                });
+            } else {
+                list.innerHTML = "<p style='font-size:12px; opacity:0.5; padding:10px;'>リンクがありません</p>";
+            }
         };
         renderLinks();
         
         container.appendChild(box);
-        makeWidget(box, safeKey, {left: 50 + bIdx*350, top: 500, w: 300, h: 250});
+        makeWidget(box, safeKey, {left: 50 + bIdx*40, top: 250, w: 300, h: 250});
     });
 
     notes.forEach((n, i) => {
@@ -152,26 +154,36 @@ function render() {
         ni.oninput = () => { notes[i].body = ni.value; saveNotes(); };
         nb.querySelector('.note-del').onclick = () => { notes.splice(i, 1); saveNotes(); render(); };
         container.appendChild(nb);
-        makeWidget(nb, nKey, {left: 100, top: 100, w: 300, h: 200});
+        makeWidget(nb, nKey, {left: 400, top: 100, w: 300, h: 200});
     });
 }
 
-// --- 6. ボタンアクション設定 ---
+// --- 7. ボタンアクション設定 ---
 function setupButtonActions() {
     document.getElementById('add-cat-btn').onclick = () => {
         const keys = Object.keys(bookmarkCatalog);
-        let msg = "番号を入力:\n[0] 新規空BOX\n";
+        if (keys.length === 0) {
+            alert("まず右下の📥ボタンからブックマークをインポートしてください。");
+            return;
+        }
+        let msg = "追加するカテゴリ番号を入力:\n[0] 新規空BOX\n";
         keys.forEach((n, i) => msg += `[${i+1}] ${n}\n`);
         const c = prompt(msg);
         if (c === null) return;
+        
         let newBox = { id: Date.now(), category: "", items: [] };
         if (c === "0") { 
             const n = prompt("名前:"); if(n){ newBox.category = n; links.push(newBox); saveLinks(); render(); } 
         } else if (keys[c-1]) { 
-            newBox.category = keys[c-1]; newBox.items = [...bookmarkCatalog[keys[c-1]]]; 
-            links.push(newBox); saveLinks(); render(); 
+            newBox.category = keys[c-1]; 
+            // データを深いコピーで確実に移行
+            newBox.items = JSON.parse(JSON.stringify(bookmarkCatalog[keys[c-1]])); 
+            links.push(newBox); 
+            saveLinks(); 
+            render(); 
         }
     };
+
     document.getElementById('ai-btn').onclick = () => {
         let ai = localStorage.getItem('orbitTab_last_ai');
         if (!ai) {
@@ -190,13 +202,12 @@ function setupButtonActions() {
     document.getElementById('note-setup-btn').onclick = () => { notes.push({id: Date.now(), title: "メモ", body: ""}); saveNotes(); render(); };
 }
 
-// --- 7. 初期化処理 ---
+// --- 8. 初期化処理 ---
 window.onload = () => { 
     updateClock(); setInterval(updateClock, 1000); render(); setupImportFeature(); setupButtonActions(); 
     const bg = localStorage.getItem('orbitTab_bg_v4');
     if (bg) {
         const bc = document.getElementById('bg-container');
         bc.style.backgroundImage = `url(${bg})`;
-        bc.style.backgroundSize = "cover"; bc.style.backgroundRepeat = "no-repeat"; bc.style.backgroundAttachment = "fixed";
     }
 };
