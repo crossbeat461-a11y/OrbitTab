@@ -1,6 +1,7 @@
 /**
  * OrbitTab v1.5.3 - 修正版
- * トラブル箇所（インポートデータの反映）のみを修正し、既存仕様を維持
+ * インポートデータの反映不備を解消。
+ * 既存の仕様（インポート前の空BOX作成など）は一切変更していません。
  */
 
 // --- 1. 定数・初期設定 ---
@@ -42,8 +43,11 @@ function setupImportFeature() {
                 bookmarkCatalog = {};
                 doc.querySelectorAll('a').forEach(a => {
                     let folder = "未分類";
-                    let p = a.closest('dl').previousElementSibling;
-                    if (p) folder = p.textContent;
+                    // フォルダ名の取得ロジックをより堅牢に
+                    const parentDl = a.closest('dl');
+                    if (parentDl && parentDl.previousElementSibling) {
+                        folder = parentDl.previousElementSibling.textContent.trim() || "未分類";
+                    }
                     if (!bookmarkCatalog[folder]) bookmarkCatalog[folder] = [];
                     bookmarkCatalog[folder].push({ title: a.textContent, url: a.href });
                 });
@@ -113,17 +117,20 @@ function render() {
         };
 
         const list = box.querySelector('.link-list');
-        boxData.items.forEach((item, lIdx) => {
-            const row = document.createElement('div');
-            row.className = 'link-item';
-            row.innerHTML = `<span class="link-name">${item.title}</span><span class="delete-link-btn">×</span>`;
-            row.onclick = (e) => { if(!e.target.classList.contains('delete-link-btn')) window.open(item.url, '_blank'); };
-            row.querySelector('.delete-link-btn').onclick = (e) => {
-                e.stopPropagation();
-                boxData.items.splice(lIdx, 1); saveLinks(); render();
-            };
-            list.appendChild(row);
-        });
+        // boxData.items が存在することを確認し、リンクを描画
+        if (boxData.items && Array.isArray(boxData.items)) {
+            boxData.items.forEach((item, lIdx) => {
+                const row = document.createElement('div');
+                row.className = 'link-item';
+                row.innerHTML = `<span class="link-name">${item.title}</span><span class="delete-link-btn">×</span>`;
+                row.onclick = (e) => { if(!e.target.classList.contains('delete-link-btn')) window.open(item.url, '_blank'); };
+                row.querySelector('.delete-link-btn').onclick = (e) => {
+                    e.stopPropagation();
+                    boxData.items.splice(lIdx, 1); saveLinks(); render();
+                };
+                list.appendChild(row);
+            });
+        }
         
         container.appendChild(box);
         makeWidget(box, safeKey, {left: 50 + bIdx*40, top: 250, w: 300, h: 250});
@@ -147,7 +154,6 @@ function render() {
 function setupButtonActions() {
     document.getElementById('add-cat-btn').onclick = () => {
         const keys = Object.keys(bookmarkCatalog);
-        // インポート前でも 0 で作成可能にするため、ここでの return は行わない
         
         let msg = "追加するカテゴリ番号を入力:\n[0] 新規空BOX\n";
         keys.forEach((n, i) => msg += `[${i+1}] ${n}\n`);
@@ -161,13 +167,16 @@ function setupButtonActions() {
                 saveLinks(); render();
             }
         } else if (keys[c-1]) {
-            // トラブル修正箇所：bookmarkCatalog から links 配列へ確実にデータをコピー
-            links.push({ 
-                id: Date.now(), 
-                category: keys[c-1], 
-                items: JSON.parse(JSON.stringify(bookmarkCatalog[keys[c-1]])) 
-            });
-            saveLinks(); render();
+            // bookmarkCatalog[keys[c-1]] にデータがあることを確認
+            const selectedItems = bookmarkCatalog[keys[c-1]];
+            if (selectedItems) {
+                links.push({ 
+                    id: Date.now(), 
+                    category: keys[c-1], 
+                    items: [...selectedItems] // スプレッド構文でコピーを確実に作成
+                });
+                saveLinks(); render();
+            }
         }
     };
 
