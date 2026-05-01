@@ -1,13 +1,10 @@
 /**
- * OrbitTab v1.5.3 - 修正版
- * インポートデータの反映不備を解消。
- * 既存の仕様（インポート前の空BOX作成など）は一切変更していません。
+ * OrbitTab v1.5.3 - 最終修正版
+ * インポートデータの永続化と解析ロジックの修正
  */
 
-// --- 1. 定数・初期設定 ---
 const DEFAULT_NOTE = [{ id: Date.now(), title: "🚀 クイックガイド", body: "右下のボタンからブックマークを読み込み、＋ボタンでBOXを追加してください。" }];
 
-// --- 2. データ保存・取得処理 ---
 function getStored(key, def) {
     const val = localStorage.getItem(key);
     try { return (val === null) ? def : JSON.parse(val); } catch(e) { return def; }
@@ -15,13 +12,14 @@ function getStored(key, def) {
 
 let links = getStored('orbitTab_v2_links', []); 
 let notes = getStored('orbitTab_notes_v4', DEFAULT_NOTE);
-let bookmarkCatalog = {}; 
+// bookmarkCatalogもlocalStorageで管理するように変更し、リロード後も参照可能にする
+let bookmarkCatalog = getStored('orbitTab_temp_catalog', {}); 
 let maxZ = 100;
 
 function saveLinks() { localStorage.setItem('orbitTab_v2_links', JSON.stringify(links)); }
 function saveNotes() { localStorage.setItem('orbitTab_notes_v4', JSON.stringify(notes)); }
+function saveCatalog() { localStorage.setItem('orbitTab_temp_catalog', JSON.stringify(bookmarkCatalog)); }
 
-// --- 3. 時計機能 ---
 function updateClock() {
     const clock = document.getElementById('clock'), date = document.getElementById('date');
     if (!clock || !date) return;
@@ -30,7 +28,6 @@ function updateClock() {
     date.innerText = now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 }
 
-// --- 4. インポート・背景設定 ---
 function setupImportFeature() {
     const input = document.getElementById('bookmark-input'), importBtn = document.getElementById('import-bookmarks-btn');
     if (importBtn) {
@@ -41,17 +38,33 @@ function setupImportFeature() {
             reader.onload = (ev) => {
                 const doc = new DOMParser().parseFromString(ev.target.result, 'text/html');
                 bookmarkCatalog = {};
-                doc.querySelectorAll('a').forEach(a => {
-                    let folder = "未分類";
-                    // フォルダ名の取得ロジックをより堅牢に
-                    const parentDl = a.closest('dl');
-                    if (parentDl && parentDl.previousElementSibling) {
-                        folder = parentDl.previousElementSibling.textContent.trim() || "未分類";
+                
+                // ブックマークフォルダ（H3）を探して、その直後のDL内にあるAタグを収集
+                doc.querySelectorAll('h3').forEach(h3 => {
+                    const folderName = h3.textContent.trim();
+                    const nextDl = h3.nextElementSibling;
+                    if (nextDl && nextDl.tagName === 'DL') {
+                        const items = [];
+                        nextDl.querySelectorAll('a').forEach(a => {
+                            items.push({ title: a.textContent.trim(), url: a.href });
+                        });
+                        if (items.length > 0) {
+                            bookmarkCatalog[folderName] = items;
+                        }
                     }
-                    if (!bookmarkCatalog[folder]) bookmarkCatalog[folder] = [];
-                    bookmarkCatalog[folder].push({ title: a.textContent, url: a.href });
                 });
-                alert("読み込み完了！");
+
+                // H3に含まれない、ルート直下のAタグも拾う（未分類用）
+                const rootLinks = [];
+                doc.querySelectorAll('body > dl > dt > a').forEach(a => {
+                    rootLinks.push({ title: a.textContent.trim(), url: a.href });
+                });
+                if (rootLinks.length > 0) {
+                    bookmarkCatalog["未分類"] = rootLinks;
+                }
+
+                saveCatalog(); // 解析結果を保存
+                alert("読み込み完了！「＋」ボタンから追加してください。");
             };
             reader.readAsText(e.target.files[0]);
         };
@@ -71,7 +84,6 @@ function setupImportFeature() {
     }
 }
 
-// --- 5. ウィジェット制御 ---
 function makeWidget(el, key, def) {
     const pos = getStored(key, def);
     el.style.left = pos.left + "px"; el.style.top = pos.top + "px";
@@ -95,7 +107,6 @@ function savePos(el, key) {
     localStorage.setItem(key, JSON.stringify({ left: el.offsetLeft, top: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight }));
 }
 
-// --- 6. 描画処理 ---
 function render() {
     const container = document.getElementById('widgets-container');
     if (!container) return; container.innerHTML = "";
@@ -104,21 +115,14 @@ function render() {
         const box = document.createElement('div');
         box.className = 'widget';
         const safeKey = `pos_id_${boxData.id}`;
-
-        box.innerHTML = `
-            <div class="widget-header">
-                <span class="widget-title">${boxData.category}</span>
-                <div class="header-btns"><span class="cat-btn cat-delete-btn">🗑️</span></div>
-            </div>
-            <div class="link-list"></div>`;
+        box.innerHTML = `<div class="widget-header"><span class="widget-title">${boxData.category}</span><div class="header-btns"><span class="cat-btn cat-delete-btn">🗑️</span></div></div><div class="link-list"></div>`;
 
         box.querySelector('.cat-delete-btn').onclick = () => {
             if(confirm("削除しますか？")) { links.splice(bIdx, 1); saveLinks(); render(); }
         };
 
         const list = box.querySelector('.link-list');
-        // boxData.items が存在することを確認し、リンクを描画
-        if (boxData.items && Array.isArray(boxData.items)) {
+        if (boxData.items) {
             boxData.items.forEach((item, lIdx) => {
                 const row = document.createElement('div');
                 row.className = 'link-item';
@@ -131,7 +135,6 @@ function render() {
                 list.appendChild(row);
             });
         }
-        
         container.appendChild(box);
         makeWidget(box, safeKey, {left: 50 + bIdx*40, top: 250, w: 300, h: 250});
     });
@@ -150,11 +153,9 @@ function render() {
     });
 }
 
-// --- 7. ボタンアクション設定 ---
 function setupButtonActions() {
     document.getElementById('add-cat-btn').onclick = () => {
         const keys = Object.keys(bookmarkCatalog);
-        
         let msg = "追加するカテゴリ番号を入力:\n[0] 新規空BOX\n";
         keys.forEach((n, i) => msg += `[${i+1}] ${n}\n`);
         const c = prompt(msg);
@@ -162,21 +163,16 @@ function setupButtonActions() {
         
         if (c === "0") {
             const n = prompt("名前:");
-            if(n) {
-                links.push({ id: Date.now(), category: n, items: [] });
-                saveLinks(); render();
-            }
+            if(n) { links.push({ id: Date.now(), category: n, items: [] }); saveLinks(); render(); }
         } else if (keys[c-1]) {
-            // bookmarkCatalog[keys[c-1]] にデータがあることを確認
-            const selectedItems = bookmarkCatalog[keys[c-1]];
-            if (selectedItems) {
-                links.push({ 
-                    id: Date.now(), 
-                    category: keys[c-1], 
-                    items: [...selectedItems] // スプレッド構文でコピーを確実に作成
-                });
-                saveLinks(); render();
-            }
+            const selectedFolderName = keys[c-1];
+            // データを深いコピーでlinksに追加
+            links.push({ 
+                id: Date.now(), 
+                category: selectedFolderName, 
+                items: JSON.parse(JSON.stringify(bookmarkCatalog[selectedFolderName])) 
+            });
+            saveLinks(); render();
         }
     };
 
@@ -198,7 +194,6 @@ function setupButtonActions() {
     document.getElementById('note-setup-btn').onclick = () => { notes.push({id: Date.now(), title: "メモ", body: ""}); saveNotes(); render(); };
 }
 
-// --- 8. 初期化処理 ---
 window.onload = () => { 
     updateClock(); setInterval(updateClock, 1000); render(); setupImportFeature(); setupButtonActions(); 
     const bg = localStorage.getItem('orbitTab_bg_v4');
