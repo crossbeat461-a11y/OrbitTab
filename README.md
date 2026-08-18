@@ -1,6 +1,6 @@
 # OrbitTab 🚀
 
-**Version 1.5.3** — Turn every new Chrome tab into your personal digital cockpit.
+**Version 1.5.4** — Turn every new Chrome tab into your personal digital cockpit.
 
 [English](#english) | [日本語](#japanese)
 
@@ -22,6 +22,7 @@ OrbitTab replaces Chrome’s default new tab with a customizable cockpit: bookma
 * **Google Calendar** — Quick open from the toolbar.
 * **Custom background** — Set your own image; it also applies to the built-in guide page.
 * **Privacy-friendly** — Layout, notes, and background stay in local browser storage.
+* **Support** — Toolbar ☕ opens [Buy Me a Coffee](https://buymeacoffee.com/k_tech_studio).
 
 ### 📥 Installation
 
@@ -37,7 +38,7 @@ Landing page:
 2. Click **📥** and import a Chrome bookmarks HTML export (optional but recommended).
 3. Click **＋**, pick a folder number (or `0` for an empty box).
 4. Drag box headers to move; drag the bottom-right corner to resize.
-5. Use **✨** for AI (side panel), **📝** for sticky notes, **📅** for Google Calendar, **🖼️** for background.
+5. Use **✨** for AI (side panel; right-click to reset), **📝** for sticky notes, **📅** for Google Calendar, **🖼️** for background, **☕** for Buy Me a Coffee.
 
 ### 📖 In-app Guide
 
@@ -79,7 +80,7 @@ No account required. Widget positions, notes, bookmark boxes, and background are
 ## 日本語
 
 **新しいタブを、自分専用のデジタル管制塔に。**  
-OrbitTab は Chrome の新規タブをカスタマイズ可能なコクピットに置き換えます。ブックマーク BOX・付箋・AI サイドパネル・カレンダー・背景画像まで、ひとつの画面にまとめられます（**v1.5.3**）。
+OrbitTab は Chrome の新規タブをカスタマイズ可能なコクピットに置き換えます。ブックマーク BOX・付箋・AI サイドパネル・カレンダー・背景画像まで、ひとつの画面にまとめられます（**v1.5.4**）。
 
 ### ✨ 主な特徴
 
@@ -91,6 +92,7 @@ OrbitTab は Chrome の新規タブをカスタマイズ可能なコクピット
 * **Google カレンダー** — ワンクリックで開く。
 * **背景カスタム** — お気に入り画像を設定（ガイドページにも反映）。
 * **ローカル完結** — レイアウトやメモはブラウザ内に保存。
+* **サポート** — 右下の ☕ から [Buy Me a Coffee](https://buymeacoffee.com/k_tech_studio) を開けます。
 
 ### 📥 インストール
 
@@ -106,7 +108,7 @@ LP：
 2. **📥** から Chrome のブックマーク HTML をインポート（任意・推奨）。
 3. **＋** でカテゴリ番号を入力（`0` で空の BOX）。
 4. BOX 上部をドラッグで移動、右下端でリサイズ。
-5. **✨** AI / **📝** 付箋 / **📅** カレンダー / **🖼️** 背景 を使ってカスタム。
+5. **✨** AI（右クリックでリセット） / **📝** 付箋 / **📅** カレンダー / **🖼️** 背景 / **☕** Coffee を使ってカスタム。
 
 ### 📖 ガイド
 
@@ -149,6 +151,7 @@ OrbitTab/
 * **Chrome Web Store:** [OrbitTab](https://chromewebstore.google.com/detail/orbittab/dmaobemdkkijdjgeefanfaffglbokkde)
 * **Landing Page:** [OrbitTab LP](https://orbit-qekyrb159-crossbeat461-a11ys-projects.vercel.app/)
 * **Developer / Studio:** [K-Tech Studio](https://github.com/crossbeat461-a11y)
+* **Buy Me a Coffee:** [k_tech_studio](https://buymeacoffee.com/k_tech_studio)
 
 ---
 

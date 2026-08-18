@@ -1,5 +1,5 @@
 /**
- * OrbitTab v1.5.3 - 最終修正版
+ * OrbitTab v1.5.4
  * インポートデータの永続化と解析ロジックの修正
  */
 
@@ -19,6 +19,14 @@ let maxZ = 100;
 function saveLinks() { localStorage.setItem('orbitTab_v2_links', JSON.stringify(links)); }
 function saveNotes() { localStorage.setItem('orbitTab_notes_v4', JSON.stringify(notes)); }
 function saveCatalog() { localStorage.setItem('orbitTab_temp_catalog', JSON.stringify(bookmarkCatalog)); }
+
+function escapeHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
 
 function updateClock() {
     const clock = document.getElementById('clock'), date = document.getElementById('date');
@@ -91,14 +99,17 @@ function makeWidget(el, key, def) {
 
     const header = el.querySelector('.widget-header');
     header.onmousedown = function(e) {
+        if (e.button !== 0) return;
         if (e.target.closest('.cat-btn') || e.target.closest('.delete-link-btn')) return;
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        e.preventDefault();
         maxZ++; el.style.zIndex = maxZ;
         let startX = e.clientX - el.offsetLeft, startY = e.clientY - el.offsetTop;
         document.onmousemove = (me) => {
             el.style.left = (me.clientX - startX) + "px";
             el.style.top = (me.clientY - startY) + "px";
         };
-        document.onmouseup = () => { document.onmousemove = null; savePos(el, key); };
+        document.onmouseup = () => { document.onmousemove = null; document.onmouseup = null; savePos(el, key); };
     };
     new ResizeObserver(() => savePos(el, key)).observe(el);
 }
@@ -115,7 +126,7 @@ function render() {
         const box = document.createElement('div');
         box.className = 'widget';
         const safeKey = `pos_id_${boxData.id}`;
-        box.innerHTML = `<div class="widget-header"><span class="widget-title">${boxData.category}</span><div class="header-btns"><span class="cat-btn cat-delete-btn">🗑️</span></div></div><div class="link-list"></div>`;
+        box.innerHTML = `<div class="widget-header"><span class="widget-title">${escapeHtml(boxData.category)}</span><div class="header-btns"><span class="cat-btn cat-delete-btn">🗑️</span></div></div><div class="link-list"></div>`;
 
         box.querySelector('.cat-delete-btn').onclick = () => {
             if(confirm("削除しますか？")) { links.splice(bIdx, 1); saveLinks(); render(); }
@@ -126,12 +137,22 @@ function render() {
             boxData.items.forEach((item, lIdx) => {
                 const row = document.createElement('div');
                 row.className = 'link-item';
-                row.innerHTML = `<span class="link-name">${item.title}</span><span class="delete-link-btn">×</span>`;
-                row.onclick = (e) => { if(!e.target.classList.contains('delete-link-btn')) window.open(item.url, '_blank'); };
-                row.querySelector('.delete-link-btn').onclick = (e) => {
+                const a = document.createElement('a');
+                a.className = 'link-name';
+                a.href = item.url;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                a.textContent = item.title;
+                const del = document.createElement('span');
+                del.className = 'delete-link-btn';
+                del.textContent = '×';
+                del.onclick = (e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     boxData.items.splice(lIdx, 1); saveLinks(); render();
                 };
+                row.appendChild(a);
+                row.appendChild(del);
                 list.appendChild(row);
             });
         }
