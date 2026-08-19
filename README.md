@@ -30,7 +30,7 @@ Official Chrome Web Store listing:
 👉 **[Install OrbitTab](https://chromewebstore.google.com/detail/orbittab/dmaobemdkkijdjgeefanfaffglbokkde)**
 
 Landing page:  
-👉 **[OrbitTab LP](https://orbit-qekyrb159-crossbeat461-a11ys-projects.vercel.app/)**
+👉 **[OrbitTab LP](https://orbit-lp-sigma.vercel.app/)**
 
 ### 🛠 How to Use
 
@@ -100,7 +100,7 @@ Chrome ウェブストア：
 👉 **[OrbitTab をインストール](https://chromewebstore.google.com/detail/orbittab/dmaobemdkkijdjgeefanfaffglbokkde)**
 
 LP：  
-👉 **[OrbitTab LP](https://orbit-qekyrb159-crossbeat461-a11ys-projects.vercel.app/)**
+👉 **[OrbitTab LP](https://orbit-lp-sigma.vercel.app/)**
 
 ### 🛠 使い方
 
@@ -149,7 +149,7 @@ OrbitTab/
 ## 🔗 Links
 
 * **Chrome Web Store:** [OrbitTab](https://chromewebstore.google.com/detail/orbittab/dmaobemdkkijdjgeefanfaffglbokkde)
-* **Landing Page:** [OrbitTab LP](https://orbit-qekyrb159-crossbeat461-a11ys-projects.vercel.app/)
+* **Landing Page:** [OrbitTab LP](https://orbit-lp-sigma.vercel.app/)
 * **Developer / Studio:** [K-Tech Studio](https://github.com/crossbeat461-a11y)
 * **Buy Me a Coffee:** [k_tech_studio](https://buymeacoffee.com/k_tech_studio)
 
