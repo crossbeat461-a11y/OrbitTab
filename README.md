@@ -74,6 +74,10 @@ OrbitTab/
 
 No account required. Widget positions, notes, bookmark boxes, and background are stored locally (`localStorage`).
 
+### Disclaimer (no warranty)
+
+This software is provided **as is**, without warranty of any kind. The developer does not guarantee that it will work in every environment. Use at your own risk.
+
 ---
 
 <a name="japanese"></a>
@@ -143,6 +147,10 @@ OrbitTab/
 | `chrome_url_overrides.newtab` | デフォルトの新規タブを置き換え |
 
 アカウント登録は不要です。BOX の位置・付箋・背景などは端末の `localStorage` に保存されます。
+
+### 免責（無保証）
+
+本ソフトウェアは **現状有姿（無保証）** で提供します。あらゆる環境での動作を保証しません。利用は自己責任です。
 
 ---
 
